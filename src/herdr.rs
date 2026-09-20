@@ -1,20 +1,13 @@
-//! The environment Herdr injects into plugin commands, the context and
-//! event JSON it passes, and calls back into Herdr through `HERDR_BIN_PATH`.
-//! Names follow herdr 0.9.
-
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use serde::Deserialize;
 
-/// The manifest id, used when Herdr did not pass `HERDR_PLUGIN_ID`.
 pub const PLUGIN_ID: &str = "shindakun.llm-lint";
 
-/// The pane entrypoint id in `herdr-plugin.toml`.
 pub const REPORT_PANE: &str = "report";
 
-/// Set by `herdr-action` when it opens the popup, so the pane lints the
-/// same root without re-deriving it.
+// Set by `herdr-action` on the popup so the pane lints the same root.
 pub const ROOT_VAR: &str = "HERDR_LLM_LINT_ROOT";
 
 fn var(name: &str) -> Option<String> {
@@ -57,12 +50,10 @@ impl PluginEnv {
         })
     }
 
-    /// Whether this process was started by Herdr.
     pub fn present() -> bool {
         var("HERDR_PLUGIN_STATE_DIR").is_some()
     }
 
-    /// Runs `herdr <args>` and returns stdout.
     pub fn run(&self, args: &[&str]) -> Result<String, String> {
         let out = Command::new(&self.bin_path)
             .args(args)
@@ -78,24 +69,21 @@ impl PluginEnv {
         Ok(String::from_utf8_lossy(&out.stdout).into_owned())
     }
 
-    /// `herdr agent list`, parsed.
     pub fn agents(&self) -> Result<Vec<Agent>, String> {
         parse_agent_list(&self.run(&["agent", "list"])?)
     }
 
-    /// `herdr agent prompt TARGET TEXT`. Returns once Herdr has written the
-    /// text and Enter; it does not wait for the agent's turn.
+    // Returns once Herdr has typed the text and Enter; it does not wait
+    // for the agent's turn.
     pub fn prompt(&self, target: &str, text: &str) -> Result<(), String> {
         self.run(&["agent", "prompt", target, text]).map(drop)
     }
 
-    /// `herdr notification show TITLE --body BODY`.
     pub fn notify(&self, title: &str, body: &str) -> Result<(), String> {
         self.run(&["notification", "show", title, "--body", body])
             .map(drop)
     }
 
-    /// Opens the report popup for `root`.
     pub fn open_report(&self, root: &Path) -> Result<(), String> {
         let root_env = format!("{ROOT_VAR}={}", root.display());
         let cwd = root.display().to_string();
@@ -116,7 +104,6 @@ impl PluginEnv {
         .map(drop)
     }
 
-    /// The workspace agent to prompt, from the context and `agent list`.
     pub fn workspace_agent(&self) -> Result<Agent, String> {
         let ctx = self.context.as_ref();
         let workspace = ctx
@@ -133,7 +120,6 @@ impl PluginEnv {
     }
 }
 
-/// The parts of `HERDR_PLUGIN_CONTEXT_JSON` this plugin reads.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
 #[serde(default)]
 pub struct Context {
@@ -149,14 +135,13 @@ impl Context {
         serde_json::from_str(json).map_err(|e| format!("HERDR_PLUGIN_CONTEXT_JSON: {e}"))
     }
 
-    /// The directory to lint: the workspace cwd. Instruction files live at
-    /// the worktree root, so the focused pane's cwd is not used.
+    // Instruction files live at the worktree root, so the focused pane's
+    // cwd is not used.
     pub fn root(&self) -> Option<PathBuf> {
         self.workspace_cwd.as_deref().map(PathBuf::from)
     }
 }
 
-/// One row of `herdr agent list`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct Agent {
     pub pane_id: String,
@@ -185,7 +170,6 @@ pub fn parse_agent_list(json: &str) -> Result<Vec<Agent>, String> {
     Ok(l.result.agents)
 }
 
-/// The workspace's only agent, else the focused one, else the first.
 pub fn pick_agent<'a>(
     agents: &'a [Agent],
     workspace_id: &str,
@@ -207,8 +191,8 @@ pub fn pick_agent<'a>(
     }
 }
 
-/// `HERDR_PLUGIN_EVENT_JSON` for `worktree.created`: the new worktree's
-/// path and the workspace Herdr opened for it.
+// `worktree.created` per herdr 0.9 `src/api/schema/events.rs`: EventKind
+// is snake_case, EventData is tagged by `type`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WorktreeCreated {
     pub workspace_id: String,
@@ -239,7 +223,6 @@ struct WorktreeInfo {
 }
 
 impl WorktreeCreated {
-    /// `None` when the JSON is some other event.
     pub fn parse(json: &str) -> Result<Option<Self>, String> {
         let e: Envelope =
             serde_json::from_str(json).map_err(|e| format!("HERDR_PLUGIN_EVENT_JSON: {e}"))?;

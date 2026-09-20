@@ -189,10 +189,6 @@ tests/
   fixtures/       recorded herdr JSON: agent list, worktree.created event
 ```
 
-The pane is a ratatui TUI like the other herdr plugins rather than a plain
-pager, because `enter` and `a` need key handling and a selection. It is
-small: four files and no background work.
-
 ## Order
 
 1. `scan`, `refs`, `ref-path`, `ref-command`, `ref-target`. Text output. Done.

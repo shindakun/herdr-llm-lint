@@ -1,12 +1,3 @@
-//! The check registry. One file per group; each group exports `checks()`.
-//! A check is a plain function over the loaded `Lint`, so cross-file checks
-//! (drift between copies) and single-file checks share one signature.
-//!
-//! Groups whose checks are not written yet still register their ids in
-//! `PLANNED`, so `disable = [...]` in a config validates against the full
-//! list from docs/PLAN.md and a check landing later does not change what a
-//! config accepts.
-
 pub mod content;
 pub mod drift;
 pub mod facts;
@@ -21,13 +12,12 @@ use crate::Lint;
 pub struct Check {
     pub id: &'static str,
     pub severity: Severity,
-    /// Off-by-default checks run only when the config's `enable` names
-    /// them.
     pub default_on: bool,
     pub run: fn(&Lint) -> Vec<Finding>,
 }
 
-/// Ids from the plan with no implementation yet.
+// Unwritten ids from docs/PLAN.md, so `disable`/`enable` in a config
+// validate against the full list before the checks land.
 pub const PLANNED: &[&str] = &[
     "ref-env",
     "ref-skill",
@@ -52,7 +42,6 @@ pub const PLANNED: &[&str] = &[
     "llm-missing",
 ];
 
-/// Every implemented check, in the order the groups appear in the plan.
 pub fn all() -> Vec<Check> {
     let mut out = Vec::new();
     out.extend(refs::checks());
@@ -65,14 +54,12 @@ pub fn all() -> Vec<Check> {
     out
 }
 
-/// Implemented and planned ids, for config validation.
 pub fn ids() -> Vec<&'static str> {
     let mut out: Vec<&'static str> = all().iter().map(|c| c.id).collect();
     out.extend(PLANNED);
     out
 }
 
-/// Runs the enabled checks and sorts the findings by file, line, and id.
 pub fn run(lint: &Lint) -> Vec<Finding> {
     let mut out: Vec<Finding> = all()
         .iter()

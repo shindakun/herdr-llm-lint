@@ -1,24 +1,14 @@
-//! Facts about the repository the checks compare against: Makefile targets,
-//! `package.json` scripts, git remotes, whether a program is on `PATH`.
-//! Version files, tool configs, and git history belong here too as their
-//! checks land.
-
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-/// Remote names assumed when the root is not a git checkout or `git` is
-/// not available.
 const DEFAULT_REMOTES: &[&str] = &["origin", "upstream"];
 
 #[derive(Debug, Clone, Default)]
 pub struct Repo {
     pub root: PathBuf,
-    /// `None` when there is no Makefile at the root.
     pub make_targets: Option<BTreeSet<String>>,
-    /// `None` when there is no `package.json` at the root.
     pub package_scripts: Option<BTreeSet<String>>,
-    /// Git remote names, so `origin/main` is read as a ref, not a path.
     pub remotes: BTreeSet<String>,
 }
 
@@ -39,8 +29,6 @@ impl Repo {
         }
     }
 
-    /// Whether `s` names a git ref rather than a file: `HEAD`, `refs/...`,
-    /// or `<remote>/<branch>`.
     pub fn is_git_ref(&self, s: &str) -> bool {
         if s == "HEAD" || s.starts_with("refs/") {
             return true;
@@ -51,7 +39,6 @@ impl Repo {
         }
     }
 
-    /// Whether `rel` exists, tried against `base` then the root.
     pub fn path_exists(&self, base: &Path, rel: &str) -> bool {
         base.join(rel).exists() || self.root.join(rel).exists()
     }
@@ -67,8 +54,6 @@ impl Repo {
     }
 }
 
-/// Target names from a Makefile: `name:` at the start of a line, excluding
-/// pattern rules, special targets like `.PHONY`, and variable assignments.
 pub fn make_targets(text: &str) -> BTreeSet<String> {
     let mut out = BTreeSet::new();
     for line in text.lines() {
@@ -92,7 +77,6 @@ pub fn make_targets(text: &str) -> BTreeSet<String> {
     out
 }
 
-/// Script names from a `package.json`. Unparseable JSON yields no scripts.
 pub fn package_scripts(text: &str) -> BTreeSet<String> {
     let v: serde_json::Value = match serde_json::from_str(text) {
         Ok(v) => v,
@@ -104,7 +88,6 @@ pub fn package_scripts(text: &str) -> BTreeSet<String> {
         .unwrap_or_default()
 }
 
-/// `git remote` at `root`, or the defaults when that fails.
 fn git_remotes(root: &Path) -> BTreeSet<String> {
     let out = Command::new("git")
         .arg("-C")
@@ -133,8 +116,6 @@ fn default_remotes() -> BTreeSet<String> {
     DEFAULT_REMOTES.iter().map(|s| s.to_string()).collect()
 }
 
-/// Whether `program` is an executable file on `PATH`. A name with a slash
-/// is checked as a path.
 pub fn on_path(program: &str) -> bool {
     if program.contains('/') {
         return is_executable(Path::new(program));

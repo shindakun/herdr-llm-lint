@@ -1,5 +1,3 @@
-//! Drawing: header, the finding list, and a status line.
-
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};

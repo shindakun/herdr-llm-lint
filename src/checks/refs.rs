@@ -1,6 +1,3 @@
-//! References: paths, commands, and targets named in the file that the
-//! repo does not have.
-
 use super::Check;
 use crate::model::{Finding, Severity};
 use crate::refs::{self, RefKind};
@@ -30,11 +27,8 @@ pub fn checks() -> Vec<Check> {
     ]
 }
 
-/// A backticked path or `@import` that does not exist, tried relative to
-/// the file's directory and then the root. Imports outside the repo (`~`,
-/// absolute) are resolved against the filesystem and skipped when missing,
-/// since they describe another machine as often as this one. Git refs
-/// such as `origin/main` are not paths.
+// `~` and absolute paths describe another machine as often as this one,
+// so they are not checked. Git refs such as `origin/main` are not paths.
 fn ref_path(lint: &Lint) -> Vec<Finding> {
     let mut out = Vec::new();
     for doc in &lint.docs {
@@ -61,8 +55,6 @@ fn ref_path(lint: &Lint) -> Vec<Finding> {
     out
 }
 
-/// A backticked command whose program is not on `PATH`, not a Makefile
-/// target, and not a package script.
 fn ref_command(lint: &Lint) -> Vec<Finding> {
     let mut out = Vec::new();
     for doc in &lint.docs {
@@ -90,8 +82,6 @@ fn ref_command(lint: &Lint) -> Vec<Finding> {
     out
 }
 
-/// `make X` with no target `X`; `npm run X` (or pnpm, yarn, bun) with no
-/// script `X`.
 fn ref_target(lint: &Lint) -> Vec<Finding> {
     let mut out = Vec::new();
     for doc in &lint.docs {

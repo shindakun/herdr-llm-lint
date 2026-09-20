@@ -1,5 +1,3 @@
-//! Pane state and the actions that need the terminal.
-
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -11,9 +9,7 @@ use crate::herdr::PluginEnv;
 use crate::model::Finding;
 
 pub enum Action {
-    /// Open the selected finding's file at its line in `$EDITOR`.
     Edit,
-    /// Send every finding to the workspace's agent.
     Send,
 }
 
@@ -68,7 +64,6 @@ impl App {
         });
     }
 
-    /// Suspends the TUI, runs `$EDITOR +LINE FILE`, and restores it.
     fn edit(&self, terminal: &mut ratatui::DefaultTerminal) -> String {
         let Some(f) = self.selected() else {
             return "nothing selected".into();

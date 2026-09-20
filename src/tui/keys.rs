@@ -1,5 +1,3 @@
-//! Key and mouse handling.
-
 use ratatui::crossterm::event::{
     KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind,
 };

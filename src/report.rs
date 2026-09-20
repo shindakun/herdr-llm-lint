@@ -1,6 +1,3 @@
-//! Output: text and JSON for the terminal, the prompt `send` gives the
-//! agent, and the exit decision.
-
 use crate::model::{Finding, Severity};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -21,7 +18,6 @@ impl std::str::FromStr for Format {
     }
 }
 
-/// One line per finding, compiler style. Empty output for no findings.
 pub fn text(findings: &[Finding]) -> String {
     let mut s = String::new();
     for f in findings {
@@ -42,15 +38,12 @@ pub fn render(findings: &[Finding], format: Format) -> Result<String, String> {
     }
 }
 
-/// Whether any finding is at or above `fail_on`.
 pub fn fails(findings: &[Finding], fail_on: Severity) -> bool {
     findings.iter().any(|f| f.severity >= fail_on)
 }
 
-/// Findings above the prompt cap are summarised, not sent.
 pub const MAX_PROMPT_FINDINGS: usize = 40;
 
-/// The prompt `send` gives the workspace agent.
 pub fn prompt(findings: &[Finding]) -> String {
     let mut s = String::from(
         "herdr-llm-lint found problems in this repo's agent instruction files. \
@@ -71,14 +64,10 @@ the repo is what drifted. Findings, one per line as file:line: check: message:\n
     s
 }
 
-/// `--fix`: the safe subset (symlink identical copies, wrap long lines,
-/// drop exact duplicate lines). Not written yet; the flag is accepted so
-/// the CLI shape is settled.
 pub fn fix(_findings: &[Finding]) -> Result<usize, String> {
     Err("--fix is not implemented yet".into())
 }
 
-/// `N finding(s)` for status lines.
 pub fn count(findings: &[Finding]) -> String {
     match findings.len() {
         1 => "1 finding".to_string(),

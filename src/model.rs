@@ -1,5 +1,3 @@
-//! Findings and severities. One finding is one line of output.
-
 use std::fmt;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -45,11 +43,11 @@ impl FromStr for Severity {
     }
 }
 
-/// One problem in one file. `file` is relative to the lint root. `line` is
-/// 1-based and absent for whole-file findings.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 pub struct Finding {
+    /// Relative to the lint root.
     pub file: PathBuf,
+    /// 1-based; `None` for whole-file findings.
     pub line: Option<usize>,
     pub check: &'static str,
     pub severity: Severity,
@@ -74,8 +72,6 @@ impl Finding {
     }
 }
 
-/// Compiler style: `file:line: check: message`, or `file: check: message`
-/// when the finding has no line.
 impl fmt::Display for Finding {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.line {

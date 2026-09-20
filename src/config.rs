@@ -1,6 +1,3 @@
-//! `.herdr-llm-lint.toml` at the lint root, else `config.toml` in the
-//! Herdr plugin config dir, else the defaults.
-
 use std::path::Path;
 
 use serde::Deserialize;
@@ -15,19 +12,12 @@ pub const DEFAULT_LINE_CHARS: usize = 120;
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct Config {
-    /// Glob patterns relative to the root.
     pub files: Vec<String>,
-    /// `size-bytes` budget.
     pub size_bytes: usize,
-    /// `shape-lines` limit.
     pub line_chars: usize,
-    /// Check ids to skip.
     pub disable: Vec<String>,
-    /// Off-by-default check ids to run.
     pub enable: Vec<String>,
-    /// Phrases for `content-denylist`, one per line. `~` expands.
     pub denylist_file: Option<String>,
-    /// Lowest severity that makes the run exit 1.
     pub fail_on: FailOn,
     pub llm: Llm,
 }
@@ -38,8 +28,6 @@ pub struct Llm {
     pub enabled: bool,
 }
 
-/// `Severity` with serde in lowercase; kept separate so the model type
-/// stays free of config concerns.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum FailOn {
@@ -74,8 +62,6 @@ impl Default for Config {
 }
 
 impl Config {
-    /// The first config that exists: the project file, then the plugin
-    /// config dir's `config.toml`, then defaults.
     pub fn load(root: &Path, config_dir: Option<&Path>) -> Result<Self, String> {
         let mut candidates = vec![root.join(FILE_NAME)];
         if let Some(dir) = config_dir {
@@ -109,7 +95,6 @@ impl Config {
         Ok(c)
     }
 
-    /// `disable` wins, then `enable`, then the check's default.
     pub fn enabled(&self, id: &str, default_on: bool) -> bool {
         if self.disable.iter().any(|d| d == id) {
             false

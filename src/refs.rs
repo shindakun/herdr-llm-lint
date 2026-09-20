@@ -1,19 +1,10 @@
-//! Extracts the things an instruction file refers to: paths, commands, env
-//! vars, and `@path` imports. Backtick spans outside fenced code blocks are
-//! classified by shape; fenced blocks are skipped because they hold whole
-//! scripts and examples rather than single references.
-
 use crate::scan::{is_fence, Doc};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RefKind {
-    /// A relative file or directory path.
     Path,
-    /// A command line; `words()` splits it.
     Command,
-    /// `$NAME` or `NAME=`; `name()` is the bare name.
     EnvVar,
-    /// A Claude `@path` import line.
     Import,
 }
 
@@ -22,7 +13,6 @@ pub struct Ref {
     /// 1-based.
     pub line: usize,
     pub kind: RefKind,
-    /// The span text as written, without backticks.
     pub text: String,
 }
 
@@ -31,7 +21,6 @@ impl Ref {
         self.text.split_whitespace().collect()
     }
 
-    /// The env var name without `$` or `=`.
     pub fn name(&self) -> &str {
         self.text
             .trim_start_matches('$')
@@ -40,20 +29,17 @@ impl Ref {
             .unwrap_or("")
     }
 
-    /// The path for `Path` and `Import` refs.
     pub fn path(&self) -> &str {
         self.text.trim_start_matches('@')
     }
 }
 
-/// File extensions that make a bare word without a slash count as a path.
 const PATH_EXTENSIONS: &[&str] = &[
     "md", "mdc", "toml", "json", "jsonc", "yaml", "yml", "rs", "go", "py", "js", "ts", "tsx",
     "jsx", "mjs", "cjs", "lock", "txt", "sh", "mod", "sum", "cfg", "ini", "env", "sql", "html",
     "css", "proto", "lua", "rb", "java", "kt", "swift", "c", "h", "cpp", "hpp",
 ];
 
-/// Every reference in `doc`, in line order.
 pub fn extract(doc: &Doc) -> Vec<Ref> {
     let mut out = Vec::new();
     let mut in_fence = false;
@@ -87,7 +73,6 @@ pub fn extract(doc: &Doc) -> Vec<Ref> {
     out
 }
 
-/// `@path` at the start of a line, Claude's import syntax.
 fn import_line(line: &str) -> Option<&str> {
     let t = line.trim();
     let rest = t.strip_prefix('@')?;
@@ -102,7 +87,6 @@ fn import_line(line: &str) -> Option<&str> {
     Some(rest)
 }
 
-/// The text of each single-backtick span in `line`.
 pub fn backtick_spans(line: &str) -> Vec<&str> {
     let mut out = Vec::new();
     let mut rest = line;
@@ -125,8 +109,6 @@ pub fn backtick_spans(line: &str) -> Vec<&str> {
     out
 }
 
-/// What a backtick span refers to, or `None` for identifiers, prose, and
-/// anything too ambiguous to check.
 pub fn classify(span: &str) -> Option<RefKind> {
     if is_env_var(span) {
         return Some(RefKind::EnvVar);
@@ -154,9 +136,6 @@ fn is_env_var(s: &str) -> bool {
         && chars.all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_')
 }
 
-/// A relative path: no spaces, no shell or glob punctuation, not a URL, and
-/// either a slash somewhere or a known file extension. Absolute and `~`
-/// paths are left alone; they are outside the repo.
 fn is_path(s: &str) -> bool {
     if s.contains(char::is_whitespace)
         || s.starts_with('/')
@@ -181,16 +160,14 @@ fn has_path_ext(s: &str) -> bool {
     !stem.is_empty() && !stem.ends_with('.') && PATH_EXTENSIONS.contains(&ext)
 }
 
-/// Language keywords that open code fragments, not commands.
+// Code fragments in backticks start with these, not commands.
 const KEYWORDS: &[&str] = &[
     "async", "await", "class", "const", "def", "enum", "export", "extern", "fn", "for", "from",
     "func", "if", "impl", "import", "let", "new", "package", "pub", "return", "self", "struct",
     "this", "type", "use", "var", "while",
 ];
 
-/// Two or more words whose first word looks like a program name and is
-/// not a language keyword. `closes #12` and the like are issue
-/// references, not commands.
+// `closes #12` is an issue reference, not a command.
 fn is_command(s: &str) -> bool {
     let mut words = s.split_whitespace();
     let Some(first) = words.next() else {

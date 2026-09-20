@@ -1,14 +1,8 @@
-//! Finds the instruction files under a root and parses each one into lines
-//! and sections.
-
 use std::path::{Path, PathBuf};
 
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use ignore::WalkBuilder;
 
-/// The patterns a run scans when the config does not set `files`. Root
-/// files for each agent, plus nested `CLAUDE.md` and `AGENTS.md` for
-/// monorepos.
 pub const DEFAULT_FILES: &[&str] = &[
     "CLAUDE.md",
     "CLAUDE.local.md",
@@ -21,24 +15,19 @@ pub const DEFAULT_FILES: &[&str] = &[
     "**/AGENTS.md",
 ];
 
-/// One instruction file, parsed.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Doc {
-    /// Absolute path.
     pub path: PathBuf,
-    /// Relative to the lint root; what findings print.
     pub rel: PathBuf,
     pub text: String,
     pub lines: Vec<String>,
     pub sections: Vec<Section>,
 }
 
-/// A heading and the lines under it. A file with text before its first
-/// heading gets a section with no heading for that text.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Section {
     pub heading: Option<String>,
-    /// `#` count; 0 for the headingless preamble.
+    /// 0 for text before the first heading, where `heading` is `None`.
     pub level: usize,
     /// 1-based, inclusive.
     pub start: usize,
@@ -64,7 +53,6 @@ impl Doc {
         }
     }
 
-    /// The directory the file lives in, for resolving relative paths.
     pub fn dir(&self) -> &Path {
         self.path.parent().unwrap_or(&self.path)
     }
@@ -74,8 +62,6 @@ impl Doc {
     }
 }
 
-/// Splits `lines` at markdown ATX headings. Headings inside fenced code
-/// blocks do not count.
 pub fn sections(lines: &[String]) -> Vec<Section> {
     let mut out: Vec<Section> = Vec::new();
     let mut in_fence = false;
@@ -118,7 +104,6 @@ pub fn sections(lines: &[String]) -> Vec<Section> {
     out
 }
 
-/// Whether a line opens or closes a fenced code block.
 pub fn is_fence(line: &str) -> bool {
     let t = line.trim_start();
     t.starts_with("```") || t.starts_with("~~~")
@@ -136,9 +121,6 @@ fn heading(line: &str) -> Option<(usize, String)> {
     Some((level, rest.trim().trim_end_matches('#').trim().to_string()))
 }
 
-/// The instruction files under `root` matching `patterns`, sorted. Walks
-/// with gitignore rules whether or not `root` is a git checkout, includes
-/// dotfiles, and never enters `.git`.
 pub fn find(root: &Path, patterns: &[String]) -> Result<Vec<PathBuf>, String> {
     let set = glob_set(patterns)?;
     let mut out = Vec::new();
@@ -169,7 +151,6 @@ fn glob_set(patterns: &[String]) -> Result<GlobSet, String> {
     b.build().map_err(|e| e.to_string())
 }
 
-/// `find` then `Doc::load` for each hit.
 pub fn load_all(root: &Path, patterns: &[String]) -> Result<Vec<Doc>, String> {
     find(root, patterns)?
         .iter()

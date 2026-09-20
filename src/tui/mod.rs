@@ -1,6 +1,3 @@
-//! The report popup: a list of findings, `enter` opens one in `$EDITOR`,
-//! `a` sends them all to the workspace's agent, `q` quits.
-
 mod app;
 mod keys;
 mod ui;

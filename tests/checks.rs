@@ -1,6 +1,3 @@
-//! Lints each fixture and compares the output with its `expected.txt`, then
-//! runs the real binary on the rotten fixture and on this repo's own root.
-
 use std::path::{Path, PathBuf};
 use std::process::Command;
 

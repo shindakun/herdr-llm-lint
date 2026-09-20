@@ -1,6 +1,3 @@
-//! Size and shape: the file is over budget, has no structure, or has lines
-//! too long to read.
-
 use super::Check;
 use crate::model::{Finding, Severity};
 use crate::Lint;
@@ -34,7 +31,6 @@ pub fn checks() -> Vec<Check> {
     ]
 }
 
-/// Over `size_bytes` from the config.
 fn size_bytes(lint: &Lint) -> Vec<Finding> {
     let budget = lint.config.size_bytes;
     lint.docs
@@ -52,11 +48,8 @@ fn size_bytes(lint: &Lint) -> Vec<Finding> {
         .collect()
 }
 
-/// Minimum non-blank lines before a file with no headings is a wall of
-/// text.
 const WALL_LINES: usize = 20;
 
-/// No headings over a long file, or one heading over everything.
 fn shape_headings(lint: &Lint) -> Vec<Finding> {
     let mut out = Vec::new();
     for d in &lint.docs {
@@ -81,14 +74,11 @@ fn shape_headings(lint: &Lint) -> Vec<Finding> {
     out
 }
 
-/// Headings and list items over `line_chars` from the config.
 fn shape_lines(lint: &Lint) -> Vec<Finding> {
     long_lines(lint, "shape-lines", is_heading_or_item)
 }
 
-/// Every other line over `line_chars`: paragraphs, list continuations,
-/// quotes. Off by default; files written one paragraph per line trip it
-/// on every line.
+// Off by default: files written one paragraph per line trip it everywhere.
 fn shape_body(lint: &Lint) -> Vec<Finding> {
     long_lines(lint, "shape-body", |line| !is_heading_or_item(line))
 }
@@ -102,8 +92,6 @@ fn is_heading_or_item(line: &str) -> bool {
     digits > 0 && (t[digits..].starts_with(". ") || t[digits..].starts_with(") "))
 }
 
-/// Lines over `line_chars` that `pick` accepts, outside fenced code
-/// blocks and tables.
 fn long_lines(lint: &Lint, id: &'static str, pick: fn(&str) -> bool) -> Vec<Finding> {
     let limit = lint.config.line_chars;
     let mut out = Vec::new();
