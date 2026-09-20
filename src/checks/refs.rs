@@ -30,7 +30,8 @@ pub fn checks() -> Vec<Check> {
 /// A backticked path or `@import` that does not exist, tried relative to
 /// the file's directory and then the root. Imports outside the repo (`~`,
 /// absolute) are resolved against the filesystem and skipped when missing,
-/// since they describe another machine as often as this one.
+/// since they describe another machine as often as this one. Git refs
+/// such as `origin/main` are not paths.
 fn ref_path(lint: &Lint) -> Vec<Finding> {
     let mut out = Vec::new();
     for doc in &lint.docs {
@@ -40,7 +41,7 @@ fn ref_path(lint: &Lint) -> Vec<Finding> {
                 RefKind::Import => r.path(),
                 _ => continue,
             };
-            if path.starts_with('/') || path.starts_with('~') {
+            if path.starts_with('/') || path.starts_with('~') || lint.repo.is_git_ref(path) {
                 continue;
             }
             if !lint.repo.path_exists(doc.dir(), path) {

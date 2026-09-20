@@ -11,6 +11,7 @@ A fixture with nothing wrong. Guards against false positives.
 ## Rules
 
 - Run `make check` before committing.
+- Rebase onto `origin/main` first; compare with `HEAD` and `refs/heads/main`.
 - Keep `package.json` scripts in sync with the Makefile.
 - Identifiers like `Config` and `foo()` are not paths.
 - Absolute and home paths such as `/usr/bin/env` and `~/.claude/CLAUDE.md` are not checked.

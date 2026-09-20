@@ -83,7 +83,7 @@ Implemented:
 | `shape-headings` | warn | twenty or more lines with no headings, or under a single heading |
 | `shape-lines` | warn | lines over 120 chars, outside code blocks and tables |
 
-Backtick spans are classified by shape: a slash or a known file extension makes a path, two or more words starting with a lowercase program name make a command, `$NAME` or `NAME=` is an env var. Fenced code blocks are skipped. Absolute and `~` paths are left alone.
+Backtick spans are classified by shape: a slash or a known file extension makes a path, two or more words starting with a lowercase program name make a command, `$NAME` or `NAME=` is an env var. Fenced code blocks are skipped. Absolute and `~` paths are left alone, and so are git refs: `HEAD`, `refs/...`, and `<remote>/<branch>` for any remote of the checkout (`origin` and `upstream` when the root is not a git repo).
 
 Planned, with ids reserved so a config can name them: `ref-env`, `ref-skill`, `fact-version`, `fact-layout`, `fact-tool`, `drift-copies`, `drift-nested`, `drift-stale`, `drift-age`, `content-dup`, `content-conflict`, `content-enforced`, `content-secret`, `content-denylist`, `content-vague`, `size-section`, `git-untracked`, `git-local-tracked`, and the opt-in `llm-conflict`, `llm-unclear`, `llm-missing`. Each is described in [docs/PLAN.md](docs/PLAN.md).
 

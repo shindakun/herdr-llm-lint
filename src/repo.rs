@@ -1,9 +1,15 @@
 //! Facts about the repository the checks compare against: Makefile targets,
-//! `package.json` scripts, whether a program is on `PATH`. Version files,
-//! tool configs, and git history belong here too as their checks land.
+//! `package.json` scripts, git remotes, whether a program is on `PATH`.
+//! Version files, tool configs, and git history belong here too as their
+//! checks land.
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+use std::process::Command;
+
+/// Remote names assumed when the root is not a git checkout or `git` is
+/// not available.
+const DEFAULT_REMOTES: &[&str] = &["origin", "upstream"];
 
 #[derive(Debug, Clone, Default)]
 pub struct Repo {
@@ -12,6 +18,8 @@ pub struct Repo {
     pub make_targets: Option<BTreeSet<String>>,
     /// `None` when there is no `package.json` at the root.
     pub package_scripts: Option<BTreeSet<String>>,
+    /// Git remote names, so `origin/main` is read as a ref, not a path.
+    pub remotes: BTreeSet<String>,
 }
 
 impl Repo {
@@ -27,6 +35,19 @@ impl Repo {
             root: root.to_path_buf(),
             make_targets,
             package_scripts,
+            remotes: git_remotes(root),
+        }
+    }
+
+    /// Whether `s` names a git ref rather than a file: `HEAD`, `refs/...`,
+    /// or `<remote>/<branch>`.
+    pub fn is_git_ref(&self, s: &str) -> bool {
+        if s == "HEAD" || s.starts_with("refs/") {
+            return true;
+        }
+        match s.split_once('/') {
+            Some((remote, branch)) => !branch.is_empty() && self.remotes.contains(remote),
+            None => false,
         }
     }
 
@@ -81,6 +102,35 @@ pub fn package_scripts(text: &str) -> BTreeSet<String> {
         .and_then(|s| s.as_object())
         .map(|o| o.keys().cloned().collect())
         .unwrap_or_default()
+}
+
+/// `git remote` at `root`, or the defaults when that fails.
+fn git_remotes(root: &Path) -> BTreeSet<String> {
+    let out = Command::new("git")
+        .arg("-C")
+        .arg(root)
+        .arg("remote")
+        .output();
+    match out {
+        Ok(o) if o.status.success() => {
+            let names: BTreeSet<String> = String::from_utf8_lossy(&o.stdout)
+                .lines()
+                .map(str::trim)
+                .filter(|l| !l.is_empty())
+                .map(str::to_string)
+                .collect();
+            if names.is_empty() {
+                default_remotes()
+            } else {
+                names
+            }
+        }
+        _ => default_remotes(),
+    }
+}
+
+fn default_remotes() -> BTreeSet<String> {
+    DEFAULT_REMOTES.iter().map(|s| s.to_string()).collect()
 }
 
 /// Whether `program` is an executable file on `PATH`. A name with a slash
@@ -151,5 +201,39 @@ mod tests {
         assert!(r.path_exists(&root, "sub/a.txt"));
         assert!(r.path_exists(&root.join("sub"), "a.txt"));
         assert!(!r.path_exists(&root, "nope"));
+    }
+
+    #[test]
+    fn git_refs_outside_a_checkout_use_the_default_remotes() {
+        let root = crate::testutil::tempdir("remotes");
+        let r = Repo::load(&root);
+        assert!(r.is_git_ref("origin/main"));
+        assert!(r.is_git_ref("upstream/master"));
+        assert!(r.is_git_ref("HEAD"));
+        assert!(r.is_git_ref("refs/heads/main"));
+        assert!(!r.is_git_ref("origin/"));
+        assert!(!r.is_git_ref("src/main.rs"));
+        assert!(!r.is_git_ref("fork/main"));
+    }
+
+    #[test]
+    fn git_refs_inside_a_checkout_use_its_remotes() {
+        let root = crate::testutil::tempdir("remotes-git");
+        let git = |args: &[&str]| {
+            let ok = Command::new("git")
+                .arg("-C")
+                .arg(&root)
+                .args(args)
+                .output()
+                .unwrap()
+                .status
+                .success();
+            assert!(ok, "git {args:?}");
+        };
+        git(&["init", "-q"]);
+        git(&["remote", "add", "fork", "https://example.invalid/x.git"]);
+        let r = Repo::load(&root);
+        assert!(r.is_git_ref("fork/main"));
+        assert!(!r.is_git_ref("origin/main"));
     }
 }

@@ -21,7 +21,7 @@ default.
 
 | Id | Finds |
 |---|---|
-| `ref-path` | a path in backticks or an `@import` line that does not exist in the worktree |
+| `ref-path` | a path in backticks or an `@import` line that does not exist in the worktree; git refs (`HEAD`, `refs/...`, `<remote>/<branch>`) are not paths |
 | `ref-command` | a backticked command whose first word is not on PATH, not a Makefile target, not a `package.json` script, and not a `cargo`/`go`/`npm` subcommand |
 | `ref-target` | `make X` where `X` is not a target; `npm run X` where `X` is not a script |
 | `ref-env` | an `$ENV_VAR` or `ENV_VAR=` that no `.env.example`, `Makefile`, CI file, or source file mentions |
