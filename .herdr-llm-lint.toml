@@ -1,3 +1,5 @@
 # The fixtures under fixtures/ hold deliberately broken instruction files,
-# so only the root file is linted here.
+# so only the root file is linted here. The history checks are off because
+# the test suite lints this file and commit counts grow.
 files = ["AGENTS.md"]
+disable = ["drift-stale", "drift-age"]

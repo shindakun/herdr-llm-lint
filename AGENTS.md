@@ -16,6 +16,7 @@ subject: `tests/checks.rs` lints the repo root and expects zero findings.
 - `src/report.rs` renders text and JSON and builds the agent prompt.
 - `src/herdr.rs` parses the Herdr context and event JSON and calls back
   through the Herdr CLI.
+- `src/git.rs` shells out to git; `src/diff.rs` counts hunks.
 - `src/tui/` is the report popup.
 - `fixtures/` are small repos the tests lint; each has an expected-output
   file such as `fixtures/rotten/expected.txt`.

@@ -8,6 +8,7 @@ use crate::scan::DEFAULT_FILES;
 pub const FILE_NAME: &str = ".herdr-llm-lint.toml";
 pub const DEFAULT_SIZE_BYTES: usize = 8192;
 pub const DEFAULT_LINE_CHARS: usize = 120;
+pub const DEFAULT_AGE_COMMITS: usize = 50;
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(default, deny_unknown_fields)]
@@ -15,6 +16,7 @@ pub struct Config {
     pub files: Vec<String>,
     pub size_bytes: usize,
     pub line_chars: usize,
+    pub age_commits: usize,
     pub disable: Vec<String>,
     pub enable: Vec<String>,
     pub denylist_file: Option<String>,
@@ -52,6 +54,7 @@ impl Default for Config {
             files: DEFAULT_FILES.iter().map(|s| s.to_string()).collect(),
             size_bytes: DEFAULT_SIZE_BYTES,
             line_chars: DEFAULT_LINE_CHARS,
+            age_commits: DEFAULT_AGE_COMMITS,
             disable: Vec::new(),
             enable: Vec::new(),
             denylist_file: None,

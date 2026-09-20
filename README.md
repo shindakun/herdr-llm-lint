@@ -82,6 +82,12 @@ Implemented:
 | `fact-version` | error | "Go 1.21", "Node 18", "Python 3.11", "Rust 1.80" in the file where `go.mod`, `.nvmrc`, `.node-version`, `package.json` engines, `.python-version`, `rust-toolchain.toml`, or `.tool-versions` says otherwise; compared on the components both sides state |
 | `fact-layout` | error | a bare path after in, under, at, into, inside, from, or to (`tests live in tests/`) that does not exist; backticked paths are `ref-path` |
 | `fact-tool` | warn | a linter, formatter, or test runner named in the file with no config file, dependency, or toolchain in the repo; only names that are unambiguous in prose (prettier, eslint, ruff, golangci-lint, not go, make, black) |
+| `drift-copies` | warn | two instruction files in one directory that are neither identical nor symlinked, with the hunk count; `CLAUDE.md` is the reference |
+| `drift-nested` | warn | a nested instruction file whose lines (20+ chars, not headings) repeat an ancestor's, three or more of them; reports the overlap |
+| `drift-stale` | info | referenced paths committed after the file's last commit; count and the newest. Skipped while the file has uncommitted changes |
+| `drift-age` | info | more than `age_commits` (default 50) commits since the file last changed |
+| `git-untracked` | warn | an instruction file inside a git checkout that git does not track |
+| `git-local-tracked` | warn | a `*.local.md` file that git tracks |
 | `size-bytes` | warn | over budget; default 8 KiB |
 | `shape-headings` | warn | twenty or more lines with no headings, or under a single heading |
 | `shape-lines` | warn | headings and list items over 120 chars, outside code blocks and tables |
@@ -91,7 +97,7 @@ Paths, targets, tools, and versions are resolved against the project the file be
 
 Backtick spans are classified by shape: a slash or a known file extension makes a path, two or more words starting with a lowercase program name make a command, `$NAME` or `NAME=` is an env var. Fenced code blocks are skipped. Absolute and `~` paths are left alone, and so are git refs: `HEAD`, `refs/...`, and `<remote>/<branch>` for any remote of the checkout (`origin` and `upstream` when the root is not a git repo).
 
-Planned, with ids reserved so a config can name them: `ref-env`, `ref-skill`, `drift-copies`, `drift-nested`, `drift-stale`, `drift-age`, `content-dup`, `content-conflict`, `content-enforced`, `content-secret`, `content-denylist`, `content-vague`, `size-section`, `git-untracked`, `git-local-tracked`, and the opt-in `llm-conflict`, `llm-unclear`, `llm-missing`. Each is described in [docs/PLAN.md](docs/PLAN.md).
+Planned, with ids reserved so a config can name them: `ref-env`, `ref-skill`, `content-dup`, `content-conflict`, `content-enforced`, `content-secret`, `content-denylist`, `content-vague`, `size-section`, and the opt-in `llm-conflict`, `llm-unclear`, `llm-missing`. Each is described in [docs/PLAN.md](docs/PLAN.md).
 
 ## Configure
 
@@ -101,6 +107,7 @@ Planned, with ids reserved so a config can name them: `ref-env`, `ref-skill`, `d
 files = ["CLAUDE.md", "AGENTS.md", "**/CLAUDE.md"]   # globs relative to the root
 size_bytes = 8192
 line_chars = 120
+age_commits = 50
 disable = ["shape-lines"]
 enable = ["shape-body"]                              # off-by-default checks to run
 fail_on = "warn"                                     # info, warn, or error
@@ -120,7 +127,7 @@ make self-lint   # lint this repo's own AGENTS.md
 make hooks       # install pre-commit
 ```
 
-`tests/checks.rs` lints each directory under `fixtures/` and compares the output with its `expected.txt`, runs the real binary on the rotten fixture, and lints this repo's root, where `AGENTS.md` must come back clean. `.herdr-llm-lint.toml` at the root limits that run to `AGENTS.md` so the fixtures' deliberate findings stay out of it.
+`tests/checks.rs` lints each directory under `fixtures/` and compares the output with its `expected.txt`, runs the real binary on the rotten fixture, and lints this repo's root, where `AGENTS.md` must come back clean. `.herdr-llm-lint.toml` at the root limits that run to `AGENTS.md` so the fixtures' deliberate findings stay out of it. The fixtures and the root config disable the history checks (`drift-stale`, `drift-age`, `git-*`), since those read this repo's own git log; `tests/git.rs` exercises them in a throwaway repo.
 
 Adding a check: a function in the group's file under `src/checks/` with `default_on` set, its id moved out of `PLANNED` in `src/checks/mod.rs`, a line in `fixtures/rotten/CLAUDE.md` that trips it, and the matching line in `fixtures/rotten/expected.txt`.
 

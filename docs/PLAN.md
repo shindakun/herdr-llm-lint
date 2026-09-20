@@ -41,8 +41,8 @@ default.
 |---|---|
 | `drift-copies` | two instruction files in the same directory that are neither identical nor symlinked, with the diff hunks |
 | `drift-nested` | a subdirectory instruction file that repeats lines from the root file (report overlap ratio) |
-| `drift-stale` | referenced paths changed in git after the instruction file was last edited; report the count and the newest one |
-| `drift-age` | commits since the file last changed, past a threshold |
+| `drift-stale` | referenced paths changed in git after the instruction file was last committed; report the count and the newest one. Info, not a failure by default |
+| `drift-age` | commits since the file last changed, past `age_commits`. Info |
 
 ### Content
 
@@ -107,6 +107,7 @@ defaults:
 files = ["CLAUDE.md", "AGENTS.md", "**/CLAUDE.md"]
 size_bytes = 8192
 line_chars = 120
+age_commits = 50
 disable = ["content-vague"]
 enable = ["shape-body"]
 fail_on = "warn"
@@ -172,8 +173,10 @@ src/
   config.rs       .herdr-llm-lint.toml, plugin config dir fallback
   scan.rs         find instruction files, parse into lines and sections
   refs.rs         extract paths, commands, env vars, imports
-  repo.rs         Makefile targets, package scripts, git remotes, PATH; git history to come
+  repo.rs         Makefile targets, package scripts, git remotes, PATH
   facts.rs        declared versions (go.mod, .nvmrc, ...) and the known-tool table
+  git.rs          tracked, last change, commits since; shells out to git
+  diff.rs         hunk count between two files
   checks/         mod.rs is the registry; one file per group: refs, facts, drift, content, size, git, llm
   report.rs       text and json output, agent prompt, fix mode
   herdr.rs        plugin env, context json, worktree.created event, calls into herdr
@@ -187,6 +190,7 @@ fixtures/
   */expected.txt  the exact text output for that fixture
 tests/
   checks.rs       lint each fixture against expected.txt, run the binary, lint this repo
+  git.rs          the history checks against a throwaway git repo
   fixtures/       recorded herdr JSON: agent list, worktree.created event
 ```
 
@@ -194,7 +198,7 @@ tests/
 
 1. `scan`, `refs`, `ref-path`, `ref-command`, `ref-target`. Text output. Done.
 2. `repo` facts, `fact-*`. Done.
-3. `drift-*`, `git-*`.
+3. `drift-*`, `git-*`. Done.
 4. `content-*`, `size-*`, `shape-*`. `size-bytes`, `shape-headings`,
    `shape-lines`, and `shape-body` are done; `size-section` and
    `content-*` are not.

@@ -1,7 +1,9 @@
 pub mod checks;
 pub mod cli;
 pub mod config;
+pub mod diff;
 pub mod facts;
+pub mod git;
 pub mod herdr;
 pub mod model;
 pub mod refs;

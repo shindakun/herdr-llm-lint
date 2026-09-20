@@ -60,6 +60,13 @@ impl Doc {
     pub fn bytes(&self) -> usize {
         self.text.len()
     }
+
+    /// `CLAUDE.local.md` and the like: one machine's overlay, not a copy.
+    pub fn is_local(&self) -> bool {
+        self.path
+            .file_name()
+            .is_some_and(|n| n.to_string_lossy().ends_with(".local.md"))
+    }
 }
 
 pub fn sections(lines: &[String]) -> Vec<Section> {
