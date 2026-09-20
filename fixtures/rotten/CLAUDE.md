@@ -12,6 +12,12 @@ Every implemented check fires at least once here.
 - Also `npm run typecheck`.
 @docs/missing.md
 
+## Facts
+
+- Requires Go 1.21 and Node 18.
+- Tests live in tests/ and handlers under internal/handlers/.
+- Format with prettier before committing.
+
 ## Shape
 
 - This list item is deliberately longer than one hundred and twenty characters so that the shape-lines check has something to report.

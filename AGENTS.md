@@ -9,7 +9,8 @@ subject: `tests/checks.rs` lints the repo root and expects zero findings.
 - `src/main.rs` dispatches argv; everything else is in the library.
 - `src/scan.rs` finds instruction files and splits them into sections.
 - `src/refs.rs` pulls paths, commands, env vars, and imports out of a file.
-- `src/repo.rs` reads Makefile targets, package scripts, and `PATH`.
+- `src/repo.rs` reads Makefile targets, package scripts, git remotes, and `PATH`;
+  `src/facts.rs` reads declared versions and the tool table.
 - `src/checks/` holds one file per check group; `src/checks/mod.rs` is the
   registry and lists the planned ids that are not written yet.
 - `src/report.rs` renders text and JSON and builds the agent prompt.

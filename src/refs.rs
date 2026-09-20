@@ -153,7 +153,7 @@ fn is_path(s: &str) -> bool {
     has_path_ext(s)
 }
 
-fn has_path_ext(s: &str) -> bool {
+pub fn has_path_ext(s: &str) -> bool {
     let Some((stem, ext)) = s.rsplit_once('.') else {
         return false;
     };

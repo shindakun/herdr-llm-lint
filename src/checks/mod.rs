@@ -21,9 +21,6 @@ pub struct Check {
 pub const PLANNED: &[&str] = &[
     "ref-env",
     "ref-skill",
-    "fact-version",
-    "fact-layout",
-    "fact-tool",
     "drift-copies",
     "drift-nested",
     "drift-stale",

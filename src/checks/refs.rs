@@ -38,10 +38,10 @@ fn ref_path(lint: &Lint) -> Vec<Finding> {
                 RefKind::Import => r.path(),
                 _ => continue,
             };
-            if path.starts_with('/') || path.starts_with('~') || lint.repo.is_git_ref(path) {
+            if path.starts_with('/') || path.starts_with('~') || lint.repo(doc).is_git_ref(path) {
                 continue;
             }
-            if !lint.repo.path_exists(doc.dir(), path) {
+            if !lint.repo(doc).path_exists(doc.dir(), path) {
                 out.push(Finding::new(
                     &doc.rel,
                     Some(r.line),
@@ -65,8 +65,9 @@ fn ref_command(lint: &Lint) -> Vec<Finding> {
             let words = r.words();
             let program = words[0];
             if repo::on_path(program)
-                || lint.repo.has_make_target(program)
-                || lint.repo.has_package_script(program)
+                || lint.repo(doc).has_tool(program)
+                || lint.repo(doc).has_make_target(program)
+                || lint.repo(doc).has_package_script(program)
             {
                 continue;
             }
@@ -75,7 +76,7 @@ fn ref_command(lint: &Lint) -> Vec<Finding> {
                 Some(r.line),
                 "ref-command",
                 Severity::Error,
-                format!("`{}` is not on PATH", program),
+                format!("`{program}` is not on PATH and the repo does not declare it"),
             ));
         }
     }
@@ -92,10 +93,10 @@ fn ref_target(lint: &Lint) -> Vec<Finding> {
             let words = r.words();
             let message = match words.as_slice() {
                 ["make", target, ..] if !target.starts_with('-') && !target.contains('=') => {
-                    if lint.repo.has_make_target(target) {
+                    if lint.repo(doc).has_make_target(target) {
                         continue;
                     }
-                    match &lint.repo.make_targets {
+                    match &lint.repo(doc).make_targets {
                         None => format!("`make {target}`: no Makefile"),
                         Some(t) => format!(
                             "`make {target}` is not a Makefile target (have: {})",
@@ -104,10 +105,10 @@ fn ref_target(lint: &Lint) -> Vec<Finding> {
                     }
                 }
                 [pm @ ("npm" | "pnpm" | "yarn" | "bun"), "run", script, ..] => {
-                    if lint.repo.has_package_script(script) {
+                    if lint.repo(doc).has_package_script(script) {
                         continue;
                     }
-                    match &lint.repo.package_scripts {
+                    match &lint.repo(doc).package_scripts {
                         None => format!("`{pm} run {script}`: no package.json"),
                         Some(s) => format!(
                             "`{pm} run {script}` is not a package.json script (have: {})",

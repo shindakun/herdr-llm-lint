@@ -77,16 +77,21 @@ Implemented:
 | Id | Severity | Finds |
 | --- | --- | --- |
 | `ref-path` | error | a path in backticks or an `@import` line that does not exist, relative to the file's directory or the root |
-| `ref-command` | error | a backticked command whose first word is not on `PATH`, not a Makefile target, and not a `package.json` script |
+| `ref-command` | error | a backticked command whose first word is not on `PATH`, not a tool the repo declares (a `justfile` declares `just`), not a Makefile target, and not a `package.json` script |
 | `ref-target` | error | `make X` where `X` is not a target; `npm run X` (or pnpm, yarn, bun) where `X` is not a script |
+| `fact-version` | error | "Go 1.21", "Node 18", "Python 3.11", "Rust 1.80" in the file where `go.mod`, `.nvmrc`, `.node-version`, `package.json` engines, `.python-version`, `rust-toolchain.toml`, or `.tool-versions` says otherwise; compared on the components both sides state |
+| `fact-layout` | error | a bare path after in, under, at, into, inside, from, or to (`tests live in tests/`) that does not exist; backticked paths are `ref-path` |
+| `fact-tool` | warn | a linter, formatter, or test runner named in the file with no config file, dependency, or toolchain in the repo; only names that are unambiguous in prose (prettier, eslint, ruff, golangci-lint, not go, make, black) |
 | `size-bytes` | warn | over budget; default 8 KiB |
 | `shape-headings` | warn | twenty or more lines with no headings, or under a single heading |
 | `shape-lines` | warn | headings and list items over 120 chars, outside code blocks and tables |
 | `shape-body` | warn, off by default | every other line over 120 chars; files written one paragraph per line trip it on every line, so it needs `enable = ["shape-body"]` |
 
+Paths, targets, tools, and versions are resolved against the project the file belongs to: the nearest ancestor with `.git`, `go.mod`, `Cargo.toml`, `package.json`, `pyproject.toml`, `build.zig`, `Makefile`, or `justfile`, else the lint root. A vendored subtree with its own build file is checked against itself.
+
 Backtick spans are classified by shape: a slash or a known file extension makes a path, two or more words starting with a lowercase program name make a command, `$NAME` or `NAME=` is an env var. Fenced code blocks are skipped. Absolute and `~` paths are left alone, and so are git refs: `HEAD`, `refs/...`, and `<remote>/<branch>` for any remote of the checkout (`origin` and `upstream` when the root is not a git repo).
 
-Planned, with ids reserved so a config can name them: `ref-env`, `ref-skill`, `fact-version`, `fact-layout`, `fact-tool`, `drift-copies`, `drift-nested`, `drift-stale`, `drift-age`, `content-dup`, `content-conflict`, `content-enforced`, `content-secret`, `content-denylist`, `content-vague`, `size-section`, `git-untracked`, `git-local-tracked`, and the opt-in `llm-conflict`, `llm-unclear`, `llm-missing`. Each is described in [docs/PLAN.md](docs/PLAN.md).
+Planned, with ids reserved so a config can name them: `ref-env`, `ref-skill`, `drift-copies`, `drift-nested`, `drift-stale`, `drift-age`, `content-dup`, `content-conflict`, `content-enforced`, `content-secret`, `content-denylist`, `content-vague`, `size-section`, `git-untracked`, `git-local-tracked`, and the opt-in `llm-conflict`, `llm-unclear`, `llm-missing`. Each is described in [docs/PLAN.md](docs/PLAN.md).
 
 ## Configure
 

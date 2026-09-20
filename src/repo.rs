@@ -1,6 +1,8 @@
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+
+use crate::facts::{self, Version};
 
 const DEFAULT_REMOTES: &[&str] = &["origin", "upstream"];
 
@@ -10,6 +12,8 @@ pub struct Repo {
     pub make_targets: Option<BTreeSet<String>>,
     pub package_scripts: Option<BTreeSet<String>>,
     pub remotes: BTreeSet<String>,
+    pub versions: BTreeMap<&'static str, Version>,
+    pub tools: BTreeSet<&'static str>,
 }
 
 impl Repo {
@@ -26,7 +30,13 @@ impl Repo {
             make_targets,
             package_scripts,
             remotes: git_remotes(root),
+            versions: facts::versions(root),
+            tools: facts::tools(root),
         }
+    }
+
+    pub fn has_tool(&self, name: &str) -> bool {
+        self.tools.contains(name)
     }
 
     pub fn is_git_ref(&self, s: &str) -> bool {

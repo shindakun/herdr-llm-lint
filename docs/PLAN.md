@@ -22,7 +22,7 @@ default.
 | Id | Finds |
 |---|---|
 | `ref-path` | a path in backticks or an `@import` line that does not exist in the worktree; git refs (`HEAD`, `refs/...`, `<remote>/<branch>`) are not paths |
-| `ref-command` | a backticked command whose first word is not on PATH, not a Makefile target, not a `package.json` script, and not a `cargo`/`go`/`npm` subcommand |
+| `ref-command` | a backticked command whose first word is not on PATH, not a tool the repo declares by config file or toolchain, not a Makefile target, and not a `package.json` script |
 | `ref-target` | `make X` where `X` is not a target; `npm run X` where `X` is not a script |
 | `ref-env` | an `$ENV_VAR` or `ENV_VAR=` that no `.env.example`, `Makefile`, CI file, or source file mentions |
 | `ref-skill` | `.claude/skills/<name>` or `.claude/commands/<name>` named but absent |
@@ -31,9 +31,9 @@ default.
 
 | Id | Finds |
 |---|---|
-| `fact-version` | a language or tool version in the file that disagrees with `go.mod`, `rust-toolchain.toml`, `.nvmrc`, `package.json` engines, `.python-version`, `.tool-versions` |
-| `fact-layout` | a claim like "tests live in `tests/`" or "entry point is `cmd/x`" where the path is missing |
-| `fact-tool` | a named linter, formatter, or test runner with no config file and no dependency in the repo |
+| `fact-version` | a Go, Rust, Node, or Python version in the file that disagrees with `go.mod`, `rust-toolchain.toml`, `.nvmrc`, `.node-version`, `package.json` engines, `.python-version`, `.tool-versions`; compared on the components both sides state, so "Node 20" agrees with `20.11.0` |
+| `fact-layout` | a bare path after a preposition ("tests live in tests/") that is missing; backticked paths are `ref-path` |
+| `fact-tool` | a linter, formatter, or test runner named in the file with no config file, dependency, or toolchain in the repo; limited to names unambiguous in prose |
 
 ### Drift
 
@@ -166,13 +166,14 @@ herdr-plugin.toml
 AGENTS.md              this repo's own instruction file; the tests lint it
 src/
   main.rs         argv dispatch only
-  lib.rs          Lint: load config, docs, repo facts; run the checks
+  lib.rs          Lint: load config, docs, one Repo per project dir; run the checks
   cli.rs          lint + the herdr-* subcommands, root detection
   model.rs        Finding, Severity, the file:line: check: message format
   config.rs       .herdr-llm-lint.toml, plugin config dir fallback
   scan.rs         find instruction files, parse into lines and sections
   refs.rs         extract paths, commands, env vars, imports
-  repo.rs         Makefile targets, package scripts, PATH; versions, tool configs, git to come
+  repo.rs         Makefile targets, package scripts, git remotes, PATH; git history to come
+  facts.rs        declared versions (go.mod, .nvmrc, ...) and the known-tool table
   checks/         mod.rs is the registry; one file per group: refs, facts, drift, content, size, git, llm
   report.rs       text and json output, agent prompt, fix mode
   herdr.rs        plugin env, context json, worktree.created event, calls into herdr
@@ -192,7 +193,7 @@ tests/
 ## Order
 
 1. `scan`, `refs`, `ref-path`, `ref-command`, `ref-target`. Text output. Done.
-2. `repo` facts, `fact-*`.
+2. `repo` facts, `fact-*`. Done.
 3. `drift-*`, `git-*`.
 4. `content-*`, `size-*`, `shape-*`. `size-bytes`, `shape-headings`,
    `shape-lines`, and `shape-body` are done; `size-section` and

@@ -8,6 +8,12 @@ A fixture with nothing wrong. Guards against false positives.
 - The build is driven by the `Makefile`; `make check` runs `make build` and `make test`.
 - JS tooling: `npm run lint` and `npm run test`.
 
+## Facts
+
+- Requires Go 1.23 and Node 20.
+- Tests live in tests/ and library code under src/.
+- Format with prettier. Go and Python as words are not tool claims.
+
 ## Rules
 
 - Run `make check` before committing.
