@@ -21,13 +21,6 @@ pub struct Check {
 pub const PLANNED: &[&str] = &[
     "ref-env",
     "ref-skill",
-    "content-dup",
-    "content-conflict",
-    "content-enforced",
-    "content-secret",
-    "content-denylist",
-    "content-vague",
-    "size-section",
     "llm-conflict",
     "llm-unclear",
     "llm-missing",

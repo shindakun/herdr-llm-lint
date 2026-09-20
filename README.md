@@ -88,7 +88,14 @@ Implemented:
 | `drift-age` | info | more than `age_commits` (default 50) commits since the file last changed |
 | `git-untracked` | warn | an instruction file inside a git checkout that git does not track |
 | `git-local-tracked` | warn | a `*.local.md` file that git tracks |
+| `content-dup` | warn | a line that repeats an earlier one: same words after list markers and punctuation are stripped, or 80%+ of them; five or more words; lines of opposite polarity are not repeats |
+| `content-conflict` | warn | a positive rule (always, must, prefer) and a negative one (never, do not, avoid) sharing three or more object words and 60% of the smaller set; reported on the later line |
+| `content-enforced` | info | a rule naming a tool within three words of run, use, with, via, keep, and so on, where `.pre-commit-config.yaml`, `lefthook.yml`, or a `.github/workflows` file already runs that tool; `cargo fmt` counts as rustfmt, `go fmt` as gofmt |
+| `content-secret` | error | an AWS key, GitHub token, Slack token, `sk-` API key, Google API key, private-key header, or `password`/`secret`/`token`/`api_key` assigned a value of 8+ chars that is not a placeholder |
+| `content-denylist` | warn | a phrase from `denylist` or `denylist_file`, case-insensitive; for keeping personal rules out of shared repos |
+| `content-vague` | warn | "be careful", "use best practices", "as appropriate", and about twenty similar phrases with no object or checkable condition |
 | `size-bytes` | warn | over budget; default 8 KiB |
+| `size-section` | warn | one section over half the file, when the file has four or more sections |
 | `shape-headings` | warn | twenty or more lines with no headings, or under a single heading |
 | `shape-lines` | warn | headings and list items over 120 chars, outside code blocks and tables |
 | `shape-body` | warn, off by default | every other line over 120 chars; files written one paragraph per line trip it on every line, so it needs `enable = ["shape-body"]` |
@@ -97,7 +104,7 @@ Paths, targets, tools, and versions are resolved against the project the file be
 
 Backtick spans are classified by shape: a slash or a known file extension makes a path, two or more words starting with a lowercase program name make a command, `$NAME` or `NAME=` is an env var. Fenced code blocks are skipped. Absolute and `~` paths are left alone, and so are git refs: `HEAD`, `refs/...`, and `<remote>/<branch>` for any remote of the checkout (`origin` and `upstream` when the root is not a git repo).
 
-Planned, with ids reserved so a config can name them: `ref-env`, `ref-skill`, `content-dup`, `content-conflict`, `content-enforced`, `content-secret`, `content-denylist`, `content-vague`, `size-section`, and the opt-in `llm-conflict`, `llm-unclear`, `llm-missing`. Each is described in [docs/PLAN.md](docs/PLAN.md).
+Planned, with ids reserved so a config can name them: `ref-env`, `ref-skill`, and the opt-in `llm-conflict`, `llm-unclear`, `llm-missing`. Each is described in [docs/PLAN.md](docs/PLAN.md).
 
 ## Configure
 
@@ -111,7 +118,8 @@ age_commits = 50
 disable = ["shape-lines"]
 enable = ["shape-body"]                              # off-by-default checks to run
 fail_on = "warn"                                     # info, warn, or error
-denylist_file = "~/.config/herdr-llm-lint/denylist.txt"   # for content-denylist, not read yet
+denylist = ["my personal"]                           # content-denylist phrases
+denylist_file = "~/.config/herdr-llm-lint/denylist.txt"   # one phrase per line, # comments
 
 [llm]
 enabled = false

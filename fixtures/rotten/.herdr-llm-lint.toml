@@ -3,3 +3,4 @@
 size_bytes = 512
 enable = ["shape-body"]
 disable = ["drift-stale", "drift-age", "git-untracked", "git-local-tracked"]
+denylist = ["my personal"]

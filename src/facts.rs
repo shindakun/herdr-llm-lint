@@ -211,6 +211,63 @@ const TOOLS: &[Tool] = &[
     t("docker", &["Dockerfile", "docker-compose.", "compose.yaml", "compose.yml"], &[], false, &[], false),
 ];
 
+const ENFORCERS: &[&str] = &[".pre-commit-config.yaml", "lefthook.yml", ".lefthook.yml"];
+
+// `cargo fmt` and `go fmt` name rustfmt and gofmt without the word.
+const ALIASES: &[(&str, &str)] = &[
+    ("cargo fmt", "rustfmt"),
+    ("cargo clippy", "clippy"),
+    ("go fmt", "gofmt"),
+    ("go vet", "govet"),
+    ("go-fmt", "gofmt"),
+    ("golangci", "golangci-lint"),
+];
+
+/// Tools that hooks or CI run, mapped to the file that runs them.
+pub fn enforced(root: &Path) -> BTreeMap<&'static str, String> {
+    let mut sources: Vec<(String, String)> = Vec::new();
+    for name in ENFORCERS {
+        if let Ok(t) = std::fs::read_to_string(root.join(name)) {
+            sources.push((name.to_string(), t));
+        }
+    }
+    if let Ok(d) = std::fs::read_dir(root.join(".github/workflows")) {
+        let mut files: Vec<_> = d.filter_map(Result::ok).map(|e| e.path()).collect();
+        files.sort();
+        for f in files {
+            let name = f.file_name().map(|n| n.to_string_lossy().into_owned());
+            if let (Some(name), Ok(t)) = (name, std::fs::read_to_string(&f)) {
+                sources.push((format!(".github/workflows/{name}"), t));
+            }
+        }
+    }
+    let mut out = BTreeMap::new();
+    for (source, text) in &sources {
+        let lower = text.to_ascii_lowercase();
+        let ws: BTreeSet<String> = words(text).collect();
+        for t in TOOLS.iter().filter(|t| t.prose) {
+            let named = ws.contains(t.name)
+                || ALIASES
+                    .iter()
+                    .any(|(alias, tool)| *tool == t.name && lower.contains(alias));
+            if named {
+                out.entry(t.name).or_insert_with(|| source.clone());
+            }
+        }
+    }
+    out
+}
+
+/// `text` lowercased with alias phrases replaced by the tool name, so
+/// `cargo fmt` tokenises as `rustfmt`.
+pub fn unalias(text: &str) -> String {
+    let mut lower = text.to_ascii_lowercase();
+    for (alias, tool) in ALIASES {
+        lower = lower.replace(alias, tool);
+    }
+    lower
+}
+
 pub fn is_prose_tool(name: &str) -> bool {
     TOOLS.iter().any(|t| t.name == name && t.prose)
 }

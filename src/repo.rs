@@ -14,6 +14,8 @@ pub struct Repo {
     pub remotes: BTreeSet<String>,
     pub versions: BTreeMap<&'static str, Version>,
     pub tools: BTreeSet<&'static str>,
+    /// Tool name to the hook or workflow file that runs it.
+    pub enforced: BTreeMap<&'static str, String>,
 }
 
 impl Repo {
@@ -32,6 +34,7 @@ impl Repo {
             remotes: git_remotes(root),
             versions: facts::versions(root),
             tools: facts::tools(root),
+            enforced: facts::enforced(root),
         }
     }
 

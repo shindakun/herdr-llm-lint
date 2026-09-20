@@ -50,7 +50,7 @@ default.
 |---|---|
 | `content-dup` | near-duplicate lines inside one file |
 | `content-conflict` | an "always X" and a "never X" on the same object, by token overlap |
-| `content-enforced` | a rule the repo already enforces by tooling (gofmt in pre-commit, prettier in CI), so the sentence is dead weight |
+| `content-enforced` | a rule the repo already enforces by tooling (gofmt in pre-commit, prettier in CI), so the sentence is dead weight. Info; the tool must sit within three words of run, use, with, keep, so a line describing what `make check` runs is not a rule |
 | `content-secret` | a token, key, or password pattern |
 | `content-denylist` | a phrase from a user-supplied list; for keeping personal rules out of shared repos |
 | `content-vague` | an imperative with no object and no checkable condition: "be careful", "use best practices" |
@@ -60,7 +60,7 @@ default.
 | Id | Finds |
 |---|---|
 | `size-bytes` | over budget; default 8 KiB, configurable |
-| `size-section` | one section over a third of the file |
+| `size-section` | one section over half the file, with four or more sections; a third fired on ordinary four-section files |
 | `shape-headings` | no headings, or a single heading over a wall of text |
 | `shape-lines` | headings and list items over 120 chars |
 | `shape-body` | any other line over 120 chars; off by default, since one-paragraph-per-line files trip it everywhere |
@@ -174,7 +174,7 @@ src/
   scan.rs         find instruction files, parse into lines and sections
   refs.rs         extract paths, commands, env vars, imports
   repo.rs         Makefile targets, package scripts, git remotes, PATH
-  facts.rs        declared versions (go.mod, .nvmrc, ...) and the known-tool table
+  facts.rs        declared versions (go.mod, .nvmrc, ...), the known-tool table, hook and CI enforced tools
   git.rs          tracked, last change, commits since; shells out to git
   diff.rs         hunk count between two files
   checks/         mod.rs is the registry; one file per group: refs, facts, drift, content, size, git, llm
@@ -199,9 +199,7 @@ tests/
 1. `scan`, `refs`, `ref-path`, `ref-command`, `ref-target`. Text output. Done.
 2. `repo` facts, `fact-*`. Done.
 3. `drift-*`, `git-*`. Done.
-4. `content-*`, `size-*`, `shape-*`. `size-bytes`, `shape-headings`,
-   `shape-lines`, and `shape-body` are done; `size-section` and
-   `content-*` are not.
+4. `content-*`, `size-*`, `shape-*`. Done.
 5. `--fix`, `--format json`. JSON is done; `--fix` is accepted and errors.
 6. Herdr subcommands and manifest. Done, not yet run under a live Herdr.
 7. `llm-*`.
@@ -211,6 +209,7 @@ tests/
 - Which instruction file formats matter beyond the six listed. Add on
   demand.
 - Whether `content-conflict` by token overlap is worth having or produces
-  noise. Run it on real repos before keeping it.
+  noise. Zero hits, true or false, on four local repos so far; it stays on
+  until a real repo shows noise.
 - How `@import` resolution works for paths outside the repo (`~/.claude/`).
   Resolve them but do not fail on them by default.

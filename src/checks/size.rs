@@ -11,6 +11,12 @@ pub fn checks() -> Vec<Check> {
             run: size_bytes,
         },
         Check {
+            id: "size-section",
+            severity: Severity::Warn,
+            default_on: true,
+            run: size_section,
+        },
+        Check {
             id: "shape-headings",
             severity: Severity::Warn,
             default_on: true,
@@ -46,6 +52,41 @@ fn size_bytes(lint: &Lint) -> Vec<Finding> {
             )
         })
         .collect()
+}
+
+const SECTION_MIN_COUNT: usize = 4;
+
+// Half the file, and only with four or more sections; a third fires on
+// ordinary four-section files.
+fn size_section(lint: &Lint) -> Vec<Finding> {
+    let mut out = Vec::new();
+    for d in &lint.docs {
+        let headed: Vec<_> = d.sections.iter().filter(|s| s.heading.is_some()).collect();
+        if headed.len() < SECTION_MIN_COUNT {
+            continue;
+        }
+        let total = d.bytes().max(1);
+        for s in headed {
+            let bytes: usize = d.lines[s.start - 1..s.end]
+                .iter()
+                .map(|l| l.len() + 1)
+                .sum();
+            if bytes * 2 > total {
+                out.push(Finding::new(
+                    &d.rel,
+                    Some(s.start),
+                    "size-section",
+                    Severity::Warn,
+                    format!(
+                        "section `{}` is {bytes} of {total} bytes ({}%)",
+                        s.heading.as_deref().unwrap_or(""),
+                        bytes * 100 / total
+                    ),
+                ));
+            }
+        }
+    }
+    out
 }
 
 const WALL_LINES: usize = 20;

@@ -14,6 +14,12 @@ A fixture with nothing wrong. Guards against false positives.
 - Tests live in tests/ and library code under src/.
 - Format with prettier. Go and Python as words are not tool claims.
 
+## Content
+
+- Never commit generated files.
+- Set `DATABASE_PASSWORD` in the environment, never in the file.
+- Always run the integration tests before merging; never skip the unit tests.
+
 ## Rules
 
 - Run `make check` before committing.

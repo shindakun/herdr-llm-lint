@@ -27,7 +27,6 @@ subject: `tests/checks.rs` lints the repo root and expects zero findings.
 
 - Run `make check` before committing. It runs `make fmt-check`,
   `make clippy`, `make test`, `make audit`, and `make md-lint`.
-- Format with `cargo fmt` and keep `cargo clippy` warning-free.
 - A new check goes in its group file under `src/checks/`, gets its id moved
   out of the planned list in `src/checks/mod.rs`, and gets a line in
   `fixtures/rotten/CLAUDE.md` plus `fixtures/rotten/expected.txt`.

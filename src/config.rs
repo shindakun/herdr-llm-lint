@@ -20,6 +20,7 @@ pub struct Config {
     pub disable: Vec<String>,
     pub enable: Vec<String>,
     pub denylist_file: Option<String>,
+    pub denylist: Vec<String>,
     pub fail_on: FailOn,
     pub llm: Llm,
 }
@@ -58,6 +59,7 @@ impl Default for Config {
             disable: Vec::new(),
             enable: Vec::new(),
             denylist_file: None,
+            denylist: Vec::new(),
             fail_on: FailOn::Warn,
             llm: Llm::default(),
         }
@@ -96,6 +98,29 @@ impl Config {
             }
         }
         Ok(c)
+    }
+
+    /// Inline `denylist` plus the lines of `denylist_file` (`~` expands;
+    /// blank lines and `#` comments skipped). A missing file is empty.
+    pub fn denylist_phrases(&self) -> Vec<String> {
+        let mut out = self.denylist.clone();
+        if let Some(file) = &self.denylist_file {
+            let path = match file.strip_prefix("~/") {
+                Some(rest) => std::env::var_os("HOME")
+                    .map(|h| std::path::PathBuf::from(h).join(rest))
+                    .unwrap_or_else(|| std::path::PathBuf::from(file)),
+                None => std::path::PathBuf::from(file),
+            };
+            if let Ok(text) = std::fs::read_to_string(path) {
+                out.extend(
+                    text.lines()
+                        .map(str::trim)
+                        .filter(|l| !l.is_empty() && !l.starts_with('#'))
+                        .map(str::to_string),
+                );
+            }
+        }
+        out
     }
 
     pub fn enabled(&self, id: &str, default_on: bool) -> bool {
@@ -154,6 +179,24 @@ enabled = true
         assert!(Config::parse("enable = [\"no-such-check\"]\n").is_err());
         assert!(Config::parse("colour = 1\n").is_err());
         assert!(Config::parse("fail_on = \"loud\"\n").is_err());
+    }
+
+    #[test]
+    fn denylist_merges_inline_and_file() {
+        let dir = crate::testutil::tempdir("denylist");
+        let file = dir.join("deny.txt");
+        std::fs::write(&file, "# personal\nmy rule\n\n  another one  \n").unwrap();
+        let c = Config::parse(&format!(
+            "denylist = [\"inline\"]\ndenylist_file = \"{}\"\n",
+            file.display()
+        ))
+        .unwrap();
+        assert_eq!(
+            c.denylist_phrases(),
+            vec!["inline", "my rule", "another one"]
+        );
+        let c = Config::parse("denylist_file = \"/nonexistent/deny.txt\"\n").unwrap();
+        assert!(c.denylist_phrases().is_empty());
     }
 
     #[test]
