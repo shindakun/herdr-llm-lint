@@ -16,15 +16,9 @@ pub struct Check {
     pub run: fn(&Lint) -> Vec<Finding>,
 }
 
-// Unwritten ids from docs/PLAN.md, so `disable`/`enable` in a config
-// validate against the full list before the checks land.
-pub const PLANNED: &[&str] = &[
-    "ref-env",
-    "ref-skill",
-    "llm-conflict",
-    "llm-unclear",
-    "llm-missing",
-];
+// Ids from docs/PLAN.md with no implementation yet; `disable`/`enable`
+// accept them so a config keeps working when they land.
+pub const PLANNED: &[&str] = &[];
 
 pub fn all() -> Vec<Check> {
     let mut out = Vec::new();

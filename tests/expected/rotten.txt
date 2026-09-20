@@ -1,0 +1,29 @@
+CLAUDE.md: size-bytes: 2202 bytes, budget is 512
+CLAUDE.md:7: ref-path: `internal/httpx/` does not exist
+CLAUDE.md:8: ref-path: `config/app.toml` does not exist
+CLAUDE.md:9: ref-target: `make check` is not a Makefile target (have: build lint test)
+CLAUDE.md:10: ref-target: `npm run lint` is not a package.json script (have: build)
+CLAUDE.md:11: ref-command: `frobnicate` is not on PATH and the repo does not declare it
+CLAUDE.md:12: ref-target: `npm run typecheck` is not a package.json script (have: build)
+CLAUDE.md:13: ref-path: `docs/missing.md` does not exist
+CLAUDE.md:14: ref-env: `UNDEFINED_SERVICE_TOKEN` is not mentioned by any file in the repo
+CLAUDE.md:14: ref-skill: skill or command `missing-one` is not in .claude/commands or a skills directory
+CLAUDE.md:14: ref-skill: skill or command `nope` is not in .claude/commands or a skills directory
+CLAUDE.md:18: fact-version: says Go 1.21, go.mod says 1.23
+CLAUDE.md:18: fact-version: says Node 18, .nvmrc says 20
+CLAUDE.md:19: fact-layout: internal/handlers/ does not exist
+CLAUDE.md:19: fact-layout: tests/ does not exist
+CLAUDE.md:20: fact-tool: prettier is named but the repo has no config or dependency for it
+CLAUDE.md:25: content-dup: repeats line 24
+CLAUDE.md:26: content-conflict: may contradict line 24
+CLAUDE.md:26: content-conflict: may contradict line 25
+CLAUDE.md:27: content-enforced: gofmt already runs in .pre-commit-config.yaml
+CLAUDE.md:28: content-secret: looks like a credential assignment
+CLAUDE.md:29: content-denylist: contains denylisted phrase `my personal`
+CLAUDE.md:30: content-vague: `be careful` has no object or checkable condition
+CLAUDE.md:30: content-vague: `use best practices` has no object or checkable condition
+CLAUDE.md:32: size-section: section `Shape` is 1251 of 2202 bytes (56%)
+CLAUDE.md:35: shape-body: 178 chars, limit is 120
+CLAUDE.md:36: shape-body: 128 chars, limit is 120
+CLAUDE.md:42: shape-lines: 133 chars, limit is 120
+CLAUDE.md:44: shape-body: 133 chars, limit is 120

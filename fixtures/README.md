@@ -1,8 +1,10 @@
 # Fixtures
 
 Each directory is a small repo with instruction files. `tests/checks.rs`
-lints every directory and compares the text output with its `expected.txt`,
-so a new check that changes a fixture's findings updates the file.
+lints every directory and compares the text output with
+`tests/expected/<name>.txt`, so a new check that changes a fixture's
+findings updates that file. The expectations live outside the fixtures
+because `ref-env` reads every file in the project.
 
 - `clean/`: zero findings; guards against false positives.
 - `rotten/`: one of every finding that fits in a single file, plus a

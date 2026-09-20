@@ -17,7 +17,10 @@ fn lint_text(root: &Path) -> String {
 
 fn check_fixture(name: &str) {
     let root = fixture(name);
-    let expected = std::fs::read_to_string(root.join("expected.txt")).unwrap();
+    let expected = std::fs::read_to_string(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join(format!("tests/expected/{name}.txt")),
+    )
+    .unwrap();
     assert_eq!(lint_text(&root), expected, "fixture {name}");
 }
 
@@ -58,7 +61,10 @@ fn binary_lints_and_exits_one() {
         .output()
         .unwrap();
     assert_eq!(out.status.code(), Some(1));
-    let expected = std::fs::read_to_string(fixture("rotten").join("expected.txt")).unwrap();
+    let expected = std::fs::read_to_string(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/expected/rotten.txt"),
+    )
+    .unwrap();
     assert_eq!(String::from_utf8_lossy(&out.stdout), expected);
 
     let out = Command::new(env!("CARGO_BIN_EXE_herdr-llm-lint"))
@@ -86,7 +92,7 @@ fn binary_lints_and_exits_one() {
         .unwrap();
     assert_eq!(out.status.code(), Some(1));
     let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
-    assert_eq!(v.as_array().unwrap().len(), 26);
+    assert_eq!(v.as_array().unwrap().len(), 29);
 }
 
 #[test]

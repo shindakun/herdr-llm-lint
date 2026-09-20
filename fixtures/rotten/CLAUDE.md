@@ -11,6 +11,7 @@ Every implemented check fires at least once here.
 - Run `frobnicate --all` to regenerate.
 - Also `npm run typecheck`.
 @docs/missing.md
+- Set `$UNDEFINED_SERVICE_TOKEN` before running; `/exists` works but `/missing-one` and the `nope` skill do not.
 
 ## Facts
 

@@ -1,10 +1,10 @@
 # herdr-llm-lint
 
-A linter for agent instruction files: `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursorrules`, `.cursor/rules/*.mdc`, `.github/copilot-instructions.md`. Runs as a CLI and as a [Herdr](https://herdr.dev) plugin. Rust, one binary. Findings look like compiler output and carry a file and line.
+Lints CLAUDE.md, AGENTS.md, and other agent instruction files for stale paths, commands, facts, and drift. Runs as a CLI and as a [Herdr](https://herdr.dev) plugin. Rust, one binary. Findings look like compiler output and carry a file and line. Covers `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursorrules`, `.cursor/rules/*.mdc`, `.github/copilot-instructions.md`, and nested `CLAUDE.md` and `AGENTS.md`.
 
 Instruction files rot. A path moves, a Makefile target is renamed, a rule gets pasted into three files and edited in one. The agent reads the stale version every session and nobody notices until it does something wrong.
 
-The design is in [docs/PLAN.md](docs/PLAN.md). This is the scaffold: the pipeline, the Herdr wiring, and the first checks are in; most of the planned checks are not written yet.
+The design is in [docs/PLAN.md](docs/PLAN.md).
 
 ## Install
 
@@ -82,13 +82,13 @@ Outside Herdr, `herdr-llm-lint herdr-pane path/to/repo` opens the same popup in 
 
 ## Checks
 
-Implemented:
-
 | Id | Severity | Finds |
 | --- | --- | --- |
 | `ref-path` | error | a path in backticks or an `@import` line that does not exist, relative to the file's directory or the root |
 | `ref-command` | error | a backticked command whose first word is not on `PATH`, not a tool the repo declares (a `justfile` declares `just`), not a Makefile target, and not a `package.json` script |
 | `ref-target` | error | `make X` where `X` is not a target; `npm run X` (or pnpm, yarn, bun) where `X` is not a script |
+| `ref-env` | warn | `$NAME` or `NAME=` in backticks that no other file in the project mentions; common shell and CI variables (`PATH`, `HOME`, `CI`, `GITHUB_TOKEN`, ...) are exempt |
+| `ref-skill` | error | `/name` as a slash command (when the project has a commands or skills directory), or a backticked word next to "skill", with no `.claude/commands/name.md` and no `name` under `.claude/skills`, `.agents/skills`, or `skills/` |
 | `fact-version` | error | "Go 1.21", "Node 18", "Python 3.11", "Rust 1.80" in the file where `go.mod`, `.nvmrc`, `.node-version`, `package.json` engines, `.python-version`, `rust-toolchain.toml`, or `.tool-versions` says otherwise; compared on the components both sides state |
 | `fact-layout` | error | a bare path after in, under, at, into, inside, from, or to (`tests live in tests/`) that does not exist; backticked paths are `ref-path` |
 | `fact-tool` | warn | a linter, formatter, or test runner named in the file with no config file, dependency, or toolchain in the repo; only names that are unambiguous in prose (prettier, eslint, ruff, golangci-lint, not go, make, black) |
@@ -114,7 +114,7 @@ Paths, targets, tools, and versions are resolved against the project the file be
 
 Backtick spans are classified by shape: a slash or a known file extension makes a path, two or more words starting with a lowercase program name make a command, `$NAME` or `NAME=` is an env var. Fenced code blocks are skipped. Absolute and `~` paths are left alone, and so are git refs: `HEAD`, `refs/...`, and `<remote>/<branch>` for any remote of the checkout (`origin` and `upstream` when the root is not a git repo).
 
-Planned, with ids reserved so a config can name them: `ref-env`, `ref-skill`, and the opt-in `llm-conflict`, `llm-unclear`, `llm-missing`. Each is described in [docs/PLAN.md](docs/PLAN.md).
+Opt-in, with `[llm] enabled = true` under Herdr: `llm-conflict`, `llm-unclear`, `llm-missing`. Each instruction file goes to the workspace agent once through `herdr agent prompt --wait` with a short repo summary; the agent writes `conflict <line> <sentence>`, `unclear <line> <sentence>`, or `missing 0 <sentence>` lines to a reply file under the plugin state dir, which become info findings. Skipped outside Herdr and whenever `CI` is set. `timeout_secs` (default 180) bounds each turn. Each is described in [docs/PLAN.md](docs/PLAN.md).
 
 ## Configure
 
@@ -133,6 +133,7 @@ denylist_file = "~/.config/herdr-llm-lint/denylist.txt"   # one phrase per line,
 
 [llm]
 enabled = false
+timeout_secs = 180
 ```
 
 The default `files` list covers the six file types at the root plus nested `CLAUDE.md` and `AGENTS.md`. The walk honours `.gitignore` and skips `.git`.
@@ -145,9 +146,9 @@ make self-lint   # lint this repo's own AGENTS.md
 make hooks       # install pre-commit
 ```
 
-`tests/fix.rs` runs `--fix` on temp copies. `tests/checks.rs` lints each directory under `fixtures/` and compares the output with its `expected.txt`, runs the real binary on the rotten fixture, and lints this repo's root, where `AGENTS.md` must come back clean. `.herdr-llm-lint.toml` at the root limits that run to `AGENTS.md` so the fixtures' deliberate findings stay out of it. The fixtures and the root config disable the history checks (`drift-stale`, `drift-age`, `git-*`), since those read this repo's own git log; `tests/git.rs` exercises them in a throwaway repo.
+`tests/fix.rs` runs `--fix` on temp copies. `tests/checks.rs` lints each directory under `fixtures/` and compares the output with `tests/expected/<name>.txt`, runs the real binary on the rotten fixture, and lints this repo's root, where `AGENTS.md` must come back clean. `.herdr-llm-lint.toml` at the root limits that run to `AGENTS.md` so the fixtures' deliberate findings stay out of it. The fixtures and the root config disable the history checks (`drift-stale`, `drift-age`, `git-*`), since those read this repo's own git log; `tests/git.rs` exercises them in a throwaway repo.
 
-Adding a check: a function in the group's file under `src/checks/` with `default_on` set, its id moved out of `PLANNED` in `src/checks/mod.rs`, a line in `fixtures/rotten/CLAUDE.md` that trips it, and the matching line in `fixtures/rotten/expected.txt`.
+Adding a check: a function in the group's file under `src/checks/` with `default_on` set, a line in `fixtures/rotten/CLAUDE.md` that trips it, and the matching line in `tests/expected/rotten.txt`.
 
 ## License
 

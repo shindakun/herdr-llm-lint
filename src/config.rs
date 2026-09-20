@@ -25,10 +25,20 @@ pub struct Config {
     pub llm: Llm,
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct Llm {
     pub enabled: bool,
+    pub timeout_secs: u64,
+}
+
+impl Default for Llm {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            timeout_secs: 180,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]

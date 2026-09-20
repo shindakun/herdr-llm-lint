@@ -2,7 +2,7 @@ id = "shindakun.llm-lint"
 name = "Instruction Lint"
 version = "0.1.0"
 min_herdr_version = "0.9.0"
-description = "Lint CLAUDE.md, AGENTS.md, and other agent instruction files"
+description = "Lints CLAUDE.md, AGENTS.md, and other agent instruction files for stale paths, commands, facts, and drift"
 platforms = ["linux", "macos"]
 
 [[build]]

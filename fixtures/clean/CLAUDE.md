@@ -27,7 +27,8 @@ A fixture with nothing wrong. Guards against false positives.
 - Keep `package.json` scripts in sync with the Makefile.
 - Identifiers like `Config` and `foo()` are not paths.
 - Absolute and home paths such as `/usr/bin/env` and `~/.claude/CLAUDE.md` are not checked.
-- `$HOME` is an env var and is not checked yet.
+- `$HOME` is a common variable; `$DATABASE_URL` is in `.env.example`.
+- Run `/review` or the `review` skill, then `/ship`.
 
 ```sh
 make nope   # fenced blocks are skipped

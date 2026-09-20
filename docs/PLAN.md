@@ -24,8 +24,8 @@ default.
 | `ref-path` | a path in backticks or an `@import` line that does not exist in the worktree; git refs (`HEAD`, `refs/...`, `<remote>/<branch>`) are not paths |
 | `ref-command` | a backticked command whose first word is not on PATH, not a tool the repo declares by config file or toolchain, not a Makefile target, and not a `package.json` script |
 | `ref-target` | `make X` where `X` is not a target; `npm run X` where `X` is not a script |
-| `ref-env` | an `$ENV_VAR` or `ENV_VAR=` that no `.env.example`, `Makefile`, CI file, or source file mentions |
-| `ref-skill` | `.claude/skills/<name>` or `.claude/commands/<name>` named but absent |
+| `ref-env` | an `$ENV_VAR` or `ENV_VAR=` that no other file in the project mentions; common shell and CI variables are exempt |
+| `ref-skill` | a `/name` slash command or a backticked name next to "skill" with no `.claude/commands/name.md` and no `name` under `.claude/skills`, `.agents/skills`, or `skills/`; backticked paths are `ref-path` |
 
 ### Facts about the repo
 
@@ -81,7 +81,9 @@ default.
 | `llm-missing` | things the repo does that no rule covers: an unusual build step, a generated directory, a required env var |
 
 These send the file and a short repo summary to the workspace agent through
-`herdr agent prompt` and parse a fixed reply format. They never run in CI.
+`herdr agent prompt --wait`; the prompt names a reply file under the plugin
+state dir and the agent writes `conflict|unclear|missing <line> <sentence>`
+lines there. They never run in CI (`CI` set) and are skipped outside Herdr.
 
 ## Output
 
@@ -116,6 +118,7 @@ fail_on = "warn"
 denylist_file = "~/.config/herdr-llm-lint/denylist.txt"
 [llm]
 enabled = false
+timeout_secs = 180
 ```
 
 Every check id, implemented or not, is a valid entry in `disable` and
@@ -190,9 +193,9 @@ fixtures/
   rotten/         one of every finding, plus a config that lowers the size budget
   monorepo/       nested files, drift
   copies/         CLAUDE.md and AGENTS.md diverged
-  */expected.txt  the exact text output for that fixture
 tests/
-  checks.rs       lint each fixture against expected.txt, run the binary, lint this repo
+  expected/       the exact text output for each fixture
+  checks.rs       lint each fixture against tests/expected, run the binary, lint this repo
   git.rs          the history checks against a throwaway git repo
   fix.rs          --fix on temp copies of the fixtures
   fixtures/       recorded herdr JSON: agent list, worktree.created event
@@ -206,7 +209,7 @@ tests/
 4. `content-*`, `size-*`, `shape-*`. Done.
 5. `--fix`, `--format json`. Done.
 6. Herdr subcommands and manifest. Done, not yet run under a live Herdr.
-7. `llm-*`.
+7. `llm-*`. Done, not yet exercised against a live agent.
 
 ## Open questions
 

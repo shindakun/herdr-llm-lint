@@ -50,8 +50,8 @@ fn wraps_long_lines_and_leaves_near_duplicates() {
     assert_eq!(code, 1);
     assert_eq!(
         stderr,
-        "CLAUDE.md:34: wrapped into 2 lines\nCLAUDE.md:35: wrapped into 2 lines\n\
-CLAUDE.md:41: wrapped into 2 lines\nCLAUDE.md:43: wrapped into 2 lines\n"
+        "CLAUDE.md:35: wrapped into 2 lines\nCLAUDE.md:36: wrapped into 2 lines\n\
+CLAUDE.md:42: wrapped into 2 lines\nCLAUDE.md:44: wrapped into 2 lines\n"
     );
     assert!(!stdout.contains("shape-"), "{stdout}");
     assert!(

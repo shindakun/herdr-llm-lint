@@ -2,11 +2,11 @@
 name = "herdr-llm-lint"
 version = "0.1.0"
 edition = "2021"
-description = "Herdr plugin and CLI that lints agent instruction files such as CLAUDE.md and AGENTS.md"
+description = "Lints CLAUDE.md, AGENTS.md, and other agent instruction files for stale paths, commands, facts, and drift"
 license = "MIT"
 repository = "https://github.com/shindakun/herdr-llm-lint"
 readme = "README.md"
-keywords = ["herdr", "lint", "claude", "agents", "tui"]
+keywords = ["herdr", "lint", "claude-md", "agents-md", "ai-agents"]
 categories = ["command-line-utilities", "development-tools"]
 exclude = ["fixtures/"]
 
