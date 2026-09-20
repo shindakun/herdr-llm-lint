@@ -81,7 +81,8 @@ Implemented:
 | `ref-target` | error | `make X` where `X` is not a target; `npm run X` (or pnpm, yarn, bun) where `X` is not a script |
 | `size-bytes` | warn | over budget; default 8 KiB |
 | `shape-headings` | warn | twenty or more lines with no headings, or under a single heading |
-| `shape-lines` | warn | lines over 120 chars, outside code blocks and tables |
+| `shape-lines` | warn | headings and list items over 120 chars, outside code blocks and tables |
+| `shape-body` | warn, off by default | every other line over 120 chars; files written one paragraph per line trip it on every line, so it needs `enable = ["shape-body"]` |
 
 Backtick spans are classified by shape: a slash or a known file extension makes a path, two or more words starting with a lowercase program name make a command, `$NAME` or `NAME=` is an env var. Fenced code blocks are skipped. Absolute and `~` paths are left alone, and so are git refs: `HEAD`, `refs/...`, and `<remote>/<branch>` for any remote of the checkout (`origin` and `upstream` when the root is not a git repo).
 
@@ -96,6 +97,7 @@ files = ["CLAUDE.md", "AGENTS.md", "**/CLAUDE.md"]   # globs relative to the roo
 size_bytes = 8192
 line_chars = 120
 disable = ["shape-lines"]
+enable = ["shape-body"]                              # off-by-default checks to run
 fail_on = "warn"                                     # info, warn, or error
 denylist_file = "~/.config/herdr-llm-lint/denylist.txt"   # for content-denylist, not read yet
 
@@ -115,7 +117,7 @@ make hooks       # install pre-commit
 
 `tests/checks.rs` lints each directory under `fixtures/` and compares the output with its `expected.txt`, runs the real binary on the rotten fixture, and lints this repo's root, where `AGENTS.md` must come back clean. `.herdr-llm-lint.toml` at the root limits that run to `AGENTS.md` so the fixtures' deliberate findings stay out of it.
 
-Adding a check: a function in the group's file under `src/checks/`, its id moved out of `PLANNED` in `src/checks/mod.rs`, a line in `fixtures/rotten/CLAUDE.md` that trips it, and the matching line in `fixtures/rotten/expected.txt`.
+Adding a check: a function in the group's file under `src/checks/` with `default_on` set, its id moved out of `PLANNED` in `src/checks/mod.rs`, a line in `fixtures/rotten/CLAUDE.md` that trips it, and the matching line in `fixtures/rotten/expected.txt`.
 
 ## License
 

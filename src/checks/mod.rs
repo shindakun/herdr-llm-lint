@@ -21,6 +21,9 @@ use crate::Lint;
 pub struct Check {
     pub id: &'static str,
     pub severity: Severity,
+    /// Off-by-default checks run only when the config's `enable` names
+    /// them.
+    pub default_on: bool,
     pub run: fn(&Lint) -> Vec<Finding>,
 }
 
@@ -73,7 +76,7 @@ pub fn ids() -> Vec<&'static str> {
 pub fn run(lint: &Lint) -> Vec<Finding> {
     let mut out: Vec<Finding> = all()
         .iter()
-        .filter(|c| lint.config.enabled(c.id))
+        .filter(|c| lint.config.enabled(c.id, c.default_on))
         .filter(|c| !c.id.starts_with("llm-") || lint.config.llm.enabled)
         .flat_map(|c| (c.run)(lint))
         .collect();

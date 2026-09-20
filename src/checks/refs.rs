@@ -12,16 +12,19 @@ pub fn checks() -> Vec<Check> {
         Check {
             id: "ref-path",
             severity: Severity::Error,
+            default_on: true,
             run: ref_path,
         },
         Check {
             id: "ref-command",
             severity: Severity::Error,
+            default_on: true,
             run: ref_command,
         },
         Check {
             id: "ref-target",
             severity: Severity::Error,
+            default_on: true,
             run: ref_target,
         },
     ]

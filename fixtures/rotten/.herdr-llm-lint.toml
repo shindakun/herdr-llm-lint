@@ -1,1 +1,2 @@
 size_bytes = 512
+enable = ["shape-body"]

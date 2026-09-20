@@ -1,4 +1,4 @@
-CLAUDE.md: size-bytes: 560 bytes, budget is 512
+CLAUDE.md: size-bytes: 699 bytes, budget is 512
 CLAUDE.md:7: ref-path: `internal/httpx/` does not exist
 CLAUDE.md:8: ref-path: `config/app.toml` does not exist
 CLAUDE.md:9: ref-target: `make check` is not a Makefile target (have: build lint test)
@@ -6,4 +6,5 @@ CLAUDE.md:10: ref-target: `npm run lint` is not a package.json script (have: bui
 CLAUDE.md:11: ref-command: `frobnicate` is not on PATH
 CLAUDE.md:12: ref-target: `npm run typecheck` is not a package.json script (have: build)
 CLAUDE.md:13: ref-path: `docs/missing.md` does not exist
-CLAUDE.md:17: shape-lines: 129 chars, limit is 120
+CLAUDE.md:17: shape-lines: 133 chars, limit is 120
+CLAUDE.md:19: shape-body: 133 chars, limit is 120

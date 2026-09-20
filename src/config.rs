@@ -23,6 +23,8 @@ pub struct Config {
     pub line_chars: usize,
     /// Check ids to skip.
     pub disable: Vec<String>,
+    /// Off-by-default check ids to run.
+    pub enable: Vec<String>,
     /// Phrases for `content-denylist`, one per line. `~` expands.
     pub denylist_file: Option<String>,
     /// Lowest severity that makes the run exit 1.
@@ -63,6 +65,7 @@ impl Default for Config {
             size_bytes: DEFAULT_SIZE_BYTES,
             line_chars: DEFAULT_LINE_CHARS,
             disable: Vec::new(),
+            enable: Vec::new(),
             denylist_file: None,
             fail_on: FailOn::Warn,
             llm: Llm::default(),
@@ -95,16 +98,26 @@ impl Config {
         if c.files.is_empty() {
             return Err("files must name at least one pattern".into());
         }
-        for id in &c.disable {
-            if !crate::checks::ids().contains(&id.as_str()) {
-                return Err(format!("disable: unknown check `{id}`"));
+        let known = crate::checks::ids();
+        for (key, list) in [("disable", &c.disable), ("enable", &c.enable)] {
+            for id in list {
+                if !known.contains(&id.as_str()) {
+                    return Err(format!("{key}: unknown check `{id}`"));
+                }
             }
         }
         Ok(c)
     }
 
-    pub fn enabled(&self, id: &str) -> bool {
-        !self.disable.iter().any(|d| d == id)
+    /// `disable` wins, then `enable`, then the check's default.
+    pub fn enabled(&self, id: &str, default_on: bool) -> bool {
+        if self.disable.iter().any(|d| d == id) {
+            false
+        } else if self.enable.iter().any(|e| e == id) {
+            true
+        } else {
+            default_on
+        }
     }
 }
 
@@ -128,6 +141,7 @@ mod tests {
 files = ["CLAUDE.md"]
 size_bytes = 512
 disable = ["ref-command"]
+enable = ["shape-body"]
 fail_on = "error"
 [llm]
 enabled = true
@@ -136,8 +150,11 @@ enabled = true
         .unwrap();
         assert_eq!(c.files, vec!["CLAUDE.md"]);
         assert_eq!(c.size_bytes, 512);
-        assert!(!c.enabled("ref-command"));
-        assert!(c.enabled("ref-path"));
+        assert!(!c.enabled("ref-command", true));
+        assert!(c.enabled("ref-path", true));
+        assert!(c.enabled("shape-body", false));
+        assert!(!c.enabled("shape-lines", false));
+        assert!(!Config::default().enabled("shape-body", false));
         assert_eq!(Severity::from(c.fail_on), Severity::Error);
         assert!(c.llm.enabled);
     }
@@ -146,6 +163,7 @@ enabled = true
     fn rejects_bad_input() {
         assert!(Config::parse("files = []\n").is_err());
         assert!(Config::parse("disable = [\"no-such-check\"]\n").is_err());
+        assert!(Config::parse("enable = [\"no-such-check\"]\n").is_err());
         assert!(Config::parse("colour = 1\n").is_err());
         assert!(Config::parse("fail_on = \"loud\"\n").is_err());
     }

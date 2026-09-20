@@ -62,7 +62,8 @@ default.
 | `size-bytes` | over budget; default 8 KiB, configurable |
 | `size-section` | one section over a third of the file |
 | `shape-headings` | no headings, or a single heading over a wall of text |
-| `shape-lines` | lines over 120 chars |
+| `shape-lines` | headings and list items over 120 chars |
+| `shape-body` | any other line over 120 chars; off by default, since one-paragraph-per-line files trip it everywhere |
 
 ### Git
 
@@ -107,14 +108,17 @@ files = ["CLAUDE.md", "AGENTS.md", "**/CLAUDE.md"]
 size_bytes = 8192
 line_chars = 120
 disable = ["content-vague"]
+enable = ["shape-body"]
 fail_on = "warn"
 denylist_file = "~/.config/herdr-llm-lint/denylist.txt"
 [llm]
 enabled = false
 ```
 
-Every check id, implemented or not, is a valid entry in `disable`, so a
-config written against the full list keeps working as checks land.
+Every check id, implemented or not, is a valid entry in `disable` and
+`enable`, so a config written against the full list keeps working as
+checks land. `disable` wins over `enable`; a check not named in either
+runs when it is on by default.
 
 ## Herdr wiring
 
@@ -194,8 +198,9 @@ small: four files and no background work.
 1. `scan`, `refs`, `ref-path`, `ref-command`, `ref-target`. Text output. Done.
 2. `repo` facts, `fact-*`.
 3. `drift-*`, `git-*`.
-4. `content-*`, `size-*`, `shape-*`. `size-bytes`, `shape-headings`, and
-   `shape-lines` are done; `size-section` and `content-*` are not.
+4. `content-*`, `size-*`, `shape-*`. `size-bytes`, `shape-headings`,
+   `shape-lines`, and `shape-body` are done; `size-section` and
+   `content-*` are not.
 5. `--fix`, `--format json`. JSON is done; `--fix` is accepted and errors.
 6. Herdr subcommands and manifest. Done, not yet run under a live Herdr.
 7. `llm-*`.

@@ -89,7 +89,7 @@ fn binary_lints_and_exits_one() {
         .unwrap();
     assert_eq!(out.status.code(), Some(1));
     let v: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
-    assert_eq!(v.as_array().unwrap().len(), 9);
+    assert_eq!(v.as_array().unwrap().len(), 10);
 }
 
 #[test]

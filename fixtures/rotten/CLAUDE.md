@@ -14,6 +14,8 @@ Every implemented check fires at least once here.
 
 ## Shape
 
-This line is deliberately longer than one hundred and twenty characters so that the shape-lines check has something to report on.
+- This list item is deliberately longer than one hundred and twenty characters so that the shape-lines check has something to report.
+
+This body line is deliberately longer than one hundred and twenty characters so that the shape-body check has something to report on.
 
 Padding to push the file past the 512 byte budget set in the fixture config, one more sentence should do it here.
