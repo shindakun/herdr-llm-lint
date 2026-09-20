@@ -1,0 +1,8 @@
+{
+  "name": "clean",
+  "private": true,
+  "scripts": {
+    "lint": "true",
+    "test": "true"
+  }
+}

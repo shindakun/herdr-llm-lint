@@ -1,0 +1,3 @@
+# The fixtures under fixtures/ hold deliberately broken instruction files,
+# so only the root file is linted here.
+files = ["AGENTS.md"]

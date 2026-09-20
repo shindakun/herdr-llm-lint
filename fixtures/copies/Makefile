@@ -1,0 +1,4 @@
+test:
+	true
+lint:
+	true

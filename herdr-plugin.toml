@@ -1,0 +1,33 @@
+id = "shindakun.llm-lint"
+name = "Instruction Lint"
+version = "0.1.0"
+min_herdr_version = "0.9.0"
+description = "Lint CLAUDE.md, AGENTS.md, and other agent instruction files"
+platforms = ["linux", "macos"]
+
+[[build]]
+command = ["cargo", "build", "--release"]
+
+[[actions]]
+id = "lint"
+title = "Lint instruction files"
+contexts = ["workspace"]
+command = ["./target/release/herdr-llm-lint", "herdr-action"]
+
+[[actions]]
+id = "send"
+title = "Send lint findings to agent"
+contexts = ["workspace"]
+command = ["./target/release/herdr-llm-lint", "herdr-send"]
+
+[[events]]
+on = "worktree.created"
+command = ["./target/release/herdr-llm-lint", "herdr-event"]
+
+[[panes]]
+id = "report"
+title = "Instruction lint"
+placement = "popup"
+width = "80%"
+height = "70%"
+command = ["./target/release/herdr-llm-lint", "herdr-pane"]
