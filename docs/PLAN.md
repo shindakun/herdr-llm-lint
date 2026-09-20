@@ -95,8 +95,10 @@ CLAUDE.md: drift-stale: 6 referenced paths changed since 2026-06-02 (newest: cmd
 ```
 
 `--format json` for tooling. `--fix` for the safe subset: symlink identical
-copies, wrap long lines, drop exact duplicate lines. Exit 1 on any finding
-at or above `--fail-on` (default `warn`).
+copies, wrap long lines (not headings; backtick spans stay whole), drop
+exact duplicate lines. It prints each action to stderr, lints again, and
+prints what remains. Exit 1 on any finding at or above `--fail-on` (default
+`warn`).
 
 ## Config
 
@@ -178,7 +180,8 @@ src/
   git.rs          tracked, last change, commits since; shells out to git
   diff.rs         hunk count between two files
   checks/         mod.rs is the registry; one file per group: refs, facts, drift, content, size, git, llm
-  report.rs       text and json output, agent prompt, fix mode
+  report.rs       text and json output, agent prompt
+  fix.rs          --fix: wrap, drop exact duplicates, symlink identical copies
   herdr.rs        plugin env, context json, worktree.created event, calls into herdr
   tui/            the report popup (ratatui): mod.rs loop, app.rs state, keys.rs, ui.rs
   testutil.rs     temp dirs for unit tests
@@ -191,6 +194,7 @@ fixtures/
 tests/
   checks.rs       lint each fixture against expected.txt, run the binary, lint this repo
   git.rs          the history checks against a throwaway git repo
+  fix.rs          --fix on temp copies of the fixtures
   fixtures/       recorded herdr JSON: agent list, worktree.created event
 ```
 
@@ -200,7 +204,7 @@ tests/
 2. `repo` facts, `fact-*`. Done.
 3. `drift-*`, `git-*`. Done.
 4. `content-*`, `size-*`, `shape-*`. Done.
-5. `--fix`, `--format json`. JSON is done; `--fix` is accepted and errors.
+5. `--fix`, `--format json`. Done.
 6. Herdr subcommands and manifest. Done, not yet run under a live Herdr.
 7. `llm-*`.
 

@@ -64,10 +64,6 @@ the repo is what drifted. Findings, one per line as file:line: check: message:\n
     s
 }
 
-pub fn fix(_findings: &[Finding]) -> Result<usize, String> {
-    Err("--fix is not implemented yet".into())
-}
-
 pub fn count(findings: &[Finding]) -> String {
     match findings.len() {
         1 => "1 finding".to_string(),
@@ -132,8 +128,7 @@ mod tests {
     }
 
     #[test]
-    fn fix_is_pending() {
-        assert!(fix(&[]).is_err());
+    fn counts() {
         assert_eq!(count(&sample()), "2 findings");
         assert_eq!(count(&sample()[..1]), "1 finding");
     }

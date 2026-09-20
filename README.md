@@ -39,7 +39,17 @@ CLAUDE.md:11: ref-command: `frobnicate` is not on PATH
 CLAUDE.md: size-bytes: 9400 bytes, budget is 8192
 ```
 
-Exit 1 when any finding is at or above `--fail-on` (default `warn`, so any finding). `--fix` is accepted but not implemented yet.
+Exit 1 when any finding is at or above `--fail-on` (default `warn`, so any finding).
+
+`--fix` applies the safe subset, prints each action to stderr, then lints again and prints what remains:
+
+- long lines reported by `shape-lines` or `shape-body` are wrapped at `line_chars`, with a list item's continuation indented under its text and backtick spans kept whole; headings are left alone
+- a line reported by `content-dup` is dropped when it is an exact repeat (after trimming) of an earlier line; near-duplicates stay
+- in each directory, an instruction file identical to `CLAUDE.md` (or the first by name) becomes a relative symlink to it
+
+```sh
+herdr-llm-lint lint --fix
+```
 
 Under Herdr, bind the actions in `~/.config/herdr/config.toml`, then `herdr server reload-config`:
 
@@ -135,7 +145,7 @@ make self-lint   # lint this repo's own AGENTS.md
 make hooks       # install pre-commit
 ```
 
-`tests/checks.rs` lints each directory under `fixtures/` and compares the output with its `expected.txt`, runs the real binary on the rotten fixture, and lints this repo's root, where `AGENTS.md` must come back clean. `.herdr-llm-lint.toml` at the root limits that run to `AGENTS.md` so the fixtures' deliberate findings stay out of it. The fixtures and the root config disable the history checks (`drift-stale`, `drift-age`, `git-*`), since those read this repo's own git log; `tests/git.rs` exercises them in a throwaway repo.
+`tests/fix.rs` runs `--fix` on temp copies. `tests/checks.rs` lints each directory under `fixtures/` and compares the output with its `expected.txt`, runs the real binary on the rotten fixture, and lints this repo's root, where `AGENTS.md` must come back clean. `.herdr-llm-lint.toml` at the root limits that run to `AGENTS.md` so the fixtures' deliberate findings stay out of it. The fixtures and the root config disable the history checks (`drift-stale`, `drift-age`, `git-*`), since those read this repo's own git log; `tests/git.rs` exercises them in a throwaway repo.
 
 Adding a check: a function in the group's file under `src/checks/` with `default_on` set, its id moved out of `PLANNED` in `src/checks/mod.rs`, a line in `fixtures/rotten/CLAUDE.md` that trips it, and the matching line in `fixtures/rotten/expected.txt`.
 

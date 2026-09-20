@@ -3,6 +3,7 @@ pub mod cli;
 pub mod config;
 pub mod diff;
 pub mod facts;
+pub mod fix;
 pub mod git;
 pub mod herdr;
 pub mod model;

@@ -13,7 +13,7 @@ subject: `tests/checks.rs` lints the repo root and expects zero findings.
   `src/facts.rs` reads declared versions and the tool table.
 - `src/checks/` holds one file per check group; `src/checks/mod.rs` is the
   registry and lists the planned ids that are not written yet.
-- `src/report.rs` renders text and JSON and builds the agent prompt.
+- `src/report.rs` renders text and JSON and builds the agent prompt; `src/fix.rs` is `--fix`.
 - `src/herdr.rs` parses the Herdr context and event JSON and calls back
   through the Herdr CLI.
 - `src/git.rs` shells out to git; `src/diff.rs` counts hunks.

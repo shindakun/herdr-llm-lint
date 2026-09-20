@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use crate::herdr::{self, PluginEnv, WorktreeCreated};
 use crate::model::{Finding, Severity};
 use crate::report::{self, Format};
-use crate::{tui, Lint};
+use crate::{fix, tui, Lint};
 
 pub const USAGE: &str =
     "usage: herdr-llm-lint lint [PATH] [--format text|json] [--fail-on info|warn|error] [--fix] \
@@ -90,15 +90,20 @@ pub fn lint(args: &[String]) -> Result<(), String> {
     let a = Args::parse("lint", args, &["--format", "--fail-on"], &["--fix"])?;
     let env = plugin_env()?;
     let root = lint_root(a.path.clone(), env.as_ref())?;
-    let (lint, findings) = load(&root, env.as_ref())?;
+    let (lint, mut findings) = load(&root, env.as_ref())?;
     let format: Format = a.opt("--format").unwrap_or("text").parse()?;
     let fail_on: Severity = match a.opt("--fail-on") {
         Some(s) => s.parse()?,
         None => lint.config.fail_on.into(),
     };
     if a.flag("--fix") {
-        let n = report::fix(&findings)?;
-        eprintln!("fixed {n}");
+        let actions = fix::apply(&lint, &findings)?;
+        for action in &actions {
+            eprintln!("{action}");
+        }
+        if !actions.is_empty() {
+            findings = load(&root, env.as_ref())?.1;
+        }
     }
     print!("{}", report::render(&findings, format)?);
     if report::fails(&findings, fail_on) {
