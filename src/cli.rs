@@ -65,11 +65,15 @@ fn lint_root(path: Option<PathBuf>, env: Option<&PluginEnv>) -> Result<PathBuf, 
     if let Some(p) = path.or_else(herdr::root_override) {
         return Ok(p);
     }
-    if let Some(root) = env.and_then(|e| e.context.as_ref()).and_then(|c| c.root()) {
-        return Ok(root);
-    }
-    let cwd = std::env::current_dir().map_err(|e| format!("cwd: {e}"))?;
-    Ok(find_root(&cwd))
+    let start = match env {
+        Some(env) => env.lint_start()?,
+        None => None,
+    };
+    let start = match start {
+        Some(s) => s,
+        None => std::env::current_dir().map_err(|e| format!("cwd: {e}"))?,
+    };
+    Ok(find_root(&start))
 }
 
 pub fn find_root(start: &Path) -> PathBuf {

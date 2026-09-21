@@ -104,6 +104,46 @@ impl PluginEnv {
         .map(drop)
     }
 
+    /// Herdr's plugins directory (`~/.config/herdr/plugins`), derived from
+    /// the config dir Herdr hands out under `plugins/config/<id>`.
+    pub fn plugins_dir(&self) -> Option<PathBuf> {
+        self.config_dir
+            .ancestors()
+            .find(|a| a.file_name().is_some_and(|n| n == "plugins"))
+            .map(Path::to_path_buf)
+    }
+
+    /// A plugin pane (a file viewer, this popup) runs with a cwd inside a
+    /// plugin checkout; that is never the project to lint.
+    pub fn is_plugin_dir(&self, path: &Path) -> bool {
+        self.plugins_dir().is_some_and(|d| path.starts_with(d))
+    }
+
+    /// The directory to lint from: the workspace cwd, else the workspace
+    /// agent's cwd, else the focused pane's cwd, skipping plugin dirs.
+    pub fn lint_start(&self) -> Result<Option<PathBuf>, String> {
+        let ctx = self.context.as_ref();
+        let usable = |p: Option<&str>| {
+            p.map(PathBuf::from)
+                .filter(|p| p.is_dir() && !self.is_plugin_dir(p))
+        };
+        if let Some(p) = usable(ctx.and_then(|c| c.workspace_cwd.as_deref())) {
+            return Ok(Some(p));
+        }
+        if let Some(workspace) = ctx.and_then(|c| c.workspace_id.as_deref()) {
+            let agents = self.agents()?;
+            let agent = pick_agent(
+                &agents,
+                workspace,
+                ctx.and_then(|c| c.focused_pane_id.as_deref()),
+            );
+            if let Some(p) = usable(agent.and_then(|a| a.cwd.as_deref())) {
+                return Ok(Some(p));
+            }
+        }
+        Ok(usable(ctx.and_then(|c| c.focused_pane_cwd.as_deref())))
+    }
+
     pub fn workspace_agent(&self) -> Result<Agent, String> {
         let ctx = self.context.as_ref();
         let workspace = ctx
@@ -133,12 +173,6 @@ pub struct Context {
 impl Context {
     pub fn parse(json: &str) -> Result<Self, String> {
         serde_json::from_str(json).map_err(|e| format!("HERDR_PLUGIN_CONTEXT_JSON: {e}"))
-    }
-
-    // Instruction files live at the worktree root, so the focused pane's
-    // cwd is not used.
-    pub fn root(&self) -> Option<PathBuf> {
-        self.workspace_cwd.as_deref().map(PathBuf::from)
     }
 }
 
@@ -288,12 +322,26 @@ mod tests {
     }
 
     #[test]
-    fn context_root_is_the_workspace_cwd() {
-        let c = Context::parse(
-            r#"{"workspace_id":"w1","workspace_cwd":"/ws","focused_pane_cwd":"/ws/sub","correlation_id":"x"}"#,
-        )
-        .unwrap();
-        assert_eq!(c.root(), Some(PathBuf::from("/ws")));
-        assert_eq!(Context::parse("{}").unwrap().root(), None);
+    fn plugin_dirs_are_skipped_as_lint_starts() {
+        let cfg = Path::new("/home/u/.config/herdr/plugins/config/shindakun.llm-lint");
+        let env = PluginEnv {
+            config_dir: cfg.to_path_buf(),
+            state_dir: PathBuf::new(),
+            bin_path: PathBuf::from("/nonexistent/herdr"),
+            context: Some(Context {
+                workspace_id: None,
+                workspace_cwd: Some("/home/u/.config/herdr/plugins/github/viewer/src".into()),
+                focused_pane_id: None,
+                focused_pane_cwd: Some(std::env::temp_dir().display().to_string()),
+                invocation_source: None,
+            }),
+        };
+        assert_eq!(
+            env.plugins_dir(),
+            Some(PathBuf::from("/home/u/.config/herdr/plugins"))
+        );
+        assert!(env.is_plugin_dir(Path::new("/home/u/.config/herdr/plugins/github/viewer/src")));
+        assert_eq!(env.lint_start().unwrap(), Some(std::env::temp_dir()));
+        assert_eq!(Context::parse("{}").unwrap().workspace_cwd, None);
     }
 }
