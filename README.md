@@ -23,17 +23,17 @@ herdr plugin link /path/to/herdr-llm-lint
 
 ## Use it in Herdr
 
-Herdr has no menu for plugin actions. Bind keys in `~/.config/herdr/config.toml`, then `herdr server reload-config`:
+Herdr has no menu for plugin actions. Bind keys in `~/.config/herdr/config.toml`, then `herdr server reload-config`. Pick chords Herdr does not use: `prefix+l` and `prefix+shift+l` are pane focus and swap, and a built-in wins over a custom command on the same key.
 
 ```toml
 [[keys.command]]
-key = "prefix+l"
+key = "prefix+i"
 type = "plugin_action"
 command = "shindakun.llm-lint.lint"
 description = "lint instruction files"
 
 [[keys.command]]
-key = "prefix+shift+l"
+key = "prefix+shift+i"
 type = "plugin_action"
 command = "shindakun.llm-lint.send"
 description = "send lint findings to agent"
