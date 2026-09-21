@@ -50,8 +50,27 @@ fn header_line(app: &App) -> Line<'static> {
     ])
 }
 
+fn location(f: &crate::model::Finding) -> String {
+    match f.line {
+        Some(l) => format!("{}:{l}", f.file.display()),
+        None => f.file.display().to_string(),
+    }
+}
+
 fn draw_list(frame: &mut Frame, app: &mut App, area: Rect) {
     app.list_area = area;
+    let loc_width = app
+        .findings
+        .iter()
+        .map(|f| location(f).chars().count())
+        .max()
+        .unwrap_or(0);
+    let check_width = app
+        .findings
+        .iter()
+        .map(|f| f.check.len())
+        .max()
+        .unwrap_or(0);
     let items: Vec<ListItem> = app
         .findings
         .iter()
@@ -61,18 +80,14 @@ fn draw_list(frame: &mut Frame, app: &mut App, area: Rect) {
                 Severity::Warn => Color::Yellow,
                 Severity::Info => Color::Blue,
             };
-            let loc = match f.line {
-                Some(l) => format!("{}:{l}", f.file.display()),
-                None => f.file.display().to_string(),
-            };
             ListItem::new(Line::from(vec![
-                Span::styled(format!(" {:<7}", f.severity), Style::default().fg(color)),
+                Span::styled(format!(" {:<5} ", f.severity), Style::default().fg(color)),
                 Span::styled(
-                    format!("{loc}  "),
+                    format!("{:<loc_width$}  ", location(f)),
                     Style::default().add_modifier(Modifier::BOLD),
                 ),
                 Span::styled(
-                    format!("{}  ", f.check),
+                    format!("{:<check_width$}  ", f.check),
                     Style::default().fg(Color::DarkGray),
                 ),
                 Span::raw(f.message.clone()),
