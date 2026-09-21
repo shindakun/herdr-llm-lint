@@ -46,7 +46,7 @@ herdr plugin action invoke shindakun.llm-lint.lint   # the focused workspace; po
 herdr plugin action invoke shindakun.llm-lint.send   # give the findings to that workspace's agent
 ```
 
-`lint` finds the project from the workspace cwd, or the workspace's agent pane when the focused pane belongs to another plugin such as a file viewer, then walks up to the nearest `.git`. It opens the report popup when there are findings and shows a notification when there are none. `send` gives the findings to the workspace's agent as one prompt through `herdr agent prompt`; the prompt says to fix the file, not to change code to match a stale rule unless the rule is right. A `worktree.created` hook lints each new worktree and notifies only if it finds something.
+`lint` finds the project from the workspace cwd, or the workspace's agent pane when the focused pane belongs to another plugin such as a file viewer, then walks up to the nearest `.git`. It opens the report popup; with nothing to report the popup says so, since Herdr does not show toasts for the active tab. `send` gives the findings to the workspace's agent as one prompt through `herdr agent prompt`; the prompt says to fix the file, not to change code to match a stale rule unless the rule is right. A `worktree.created` hook lints each new worktree and notifies only if it finds something.
 
 The popup:
 

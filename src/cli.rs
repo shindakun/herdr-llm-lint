@@ -116,13 +116,13 @@ pub fn lint(args: &[String]) -> Result<(), String> {
     Ok(())
 }
 
+// Always the popup: Herdr suppresses toasts for the active tab, and a key
+// press is always in the active tab, so a "no findings" toast never shows.
 pub fn herdr_action() -> Result<(), String> {
     let env = PluginEnv::from_env()?;
     let root = lint_root(None, Some(&env))?;
     let (_, findings) = load(&root, Some(&env))?;
-    if findings.is_empty() {
-        return env.notify("Instruction lint", "no findings");
-    }
+    println!("{}: {}", root.display(), report::count(&findings));
     env.open_report(&root)
 }
 

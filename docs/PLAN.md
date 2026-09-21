@@ -155,7 +155,8 @@ command = ["./target/release/herdr-llm-lint", "herdr-pane"]
 ```
 
 - `herdr-action`: lint the workspace root from `HERDR_PLUGIN_CONTEXT_JSON`,
-  open the popup with the report.
+  open the popup with the report, findings or not (a toast for the active
+  tab is suppressed by Herdr).
 - `herdr-send`: format findings as one prompt, `herdr agent prompt` to the
   workspace's agent. Prompt says: fix the file, do not change code to match
   a stale rule unless the rule is right.
