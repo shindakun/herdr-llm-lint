@@ -21,7 +21,43 @@ cargo build --release
 herdr plugin link /path/to/herdr-llm-lint
 ```
 
-## Use it
+## Use it in Herdr
+
+Herdr has no menu for plugin actions. Bind keys in `~/.config/herdr/config.toml`, then `herdr server reload-config`:
+
+```toml
+[[keys.command]]
+key = "prefix+l"
+type = "plugin_action"
+command = "shindakun.llm-lint.lint"
+description = "lint instruction files"
+
+[[keys.command]]
+key = "prefix+shift+l"
+type = "plugin_action"
+command = "shindakun.llm-lint.send"
+description = "send lint findings to agent"
+```
+
+The same actions run from a shell:
+
+```sh
+herdr plugin action invoke shindakun.llm-lint.lint   # the focused workspace; popup when there are findings
+herdr plugin action invoke shindakun.llm-lint.send   # give the findings to that workspace's agent
+```
+
+`lint` finds the project from the workspace cwd, or the workspace's agent pane when the focused pane belongs to another plugin such as a file viewer, then walks up to the nearest `.git`. It opens the report popup when there are findings and shows a notification when there are none. `send` gives the findings to the workspace's agent as one prompt through `herdr agent prompt`; the prompt says to fix the file, not to change code to match a stale rule unless the rule is right. A `worktree.created` hook lints each new worktree and notifies only if it finds something.
+
+The popup:
+
+| Key | Does |
+| --- | --- |
+| `enter` | Open the selected finding in `$EDITOR` at its line |
+| `a` | Send every finding to the workspace's agent |
+| `j` `k` `g` `G`, arrows, mouse | Move the selection |
+| `q` | Quit |
+
+## Use it as a CLI
 
 ```sh
 herdr-llm-lint lint                      # the nearest git root, text output
@@ -50,40 +86,6 @@ Exit 1 when any finding is at or above `--fail-on` (default `warn`, so any findi
 ```sh
 herdr-llm-lint lint --fix
 ```
-
-Under Herdr there is no menu for plugin actions; run them from the CLI or bind keys.
-
-```sh
-herdr plugin action invoke shindakun.llm-lint.lint   # the focused workspace; popup when there are findings
-herdr plugin action invoke shindakun.llm-lint.send   # give the findings to that workspace's agent
-```
-
-Or bind them in `~/.config/herdr/config.toml`, then `herdr server reload-config`:
-
-```toml
-[[keys.command]]
-key = "prefix+l"
-type = "plugin_action"
-command = "shindakun.llm-lint.lint"
-description = "lint instruction files"
-
-[[keys.command]]
-key = "prefix+shift+l"
-type = "plugin_action"
-command = "shindakun.llm-lint.send"
-description = "send lint findings to agent"
-```
-
-`lint` finds the project from the workspace cwd, or the workspace's agent pane when the focused pane belongs to another plugin such as a file viewer, then walks up to the nearest `.git`. It opens the report popup when there are findings and shows a notification when there are none. `send` gives the findings to the workspace's agent as one prompt through `herdr agent prompt`; the prompt says to fix the file, not to change code to match a stale rule unless the rule is right. A `worktree.created` hook lints each new worktree and notifies only if it finds something.
-
-The popup:
-
-| Key | Does |
-| --- | --- |
-| `enter` | Open the selected finding in `$EDITOR` at its line |
-| `a` | Send every finding to the workspace's agent |
-| `j` `k` `g` `G`, arrows, mouse | Move the selection |
-| `q` | Quit |
 
 Outside Herdr, `herdr-llm-lint herdr-pane path/to/repo` opens the same popup in the current terminal, and `herdr-llm-lint herdr-send path/to/repo --print` prints the prompt instead of sending it.
 
